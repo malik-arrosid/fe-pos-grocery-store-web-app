@@ -13,12 +13,16 @@ import DetailTransaksi from "../owner/pages/DetailTransaksi.jsx";
 import DetailNotifikasi from "../owner/pages/DetailNotifikasi.jsx";
 import Notifikasi from "../owner/pages/Notifikasi.jsx";
 import useFcmNotification from "../shared/hooks/useFcmNotification.js";
+import { useAuthStore } from "../stores/useAuthStore.js";
 
 export default function OwnerRoutes() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const role = useAuthStore((state) => state.role);
 
-  useFcmNotification(); // Hook untuk mengatur FCM token dan permission
+  // Hanya minta izin & daftarkan FCM token saat device benar-benar sedang
+  // login sebagai owner — bukan hanya karena route /owner/* sedang diakses.
+  useFcmNotification({ enabled: role === "owner" });
   
   // Deteksi ukuran layar — mobile: sidebar tertutup default, desktop: terbuka
   useEffect(() => {//

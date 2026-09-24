@@ -1,12 +1,52 @@
 import { useEffect, useState, useCallback } from "react";
-import { getToken, onMessage } from "firebase/messaging";
+import { getToken, deleteToken, onMessage } from "firebase/messaging";
 import Swal from "sweetalert2";
 import { getFirebaseMessaging } from "../../lib/firebase/firebaseConfig.js";
 import ownerClient from "../../lib/http/ownerClient.js";
 
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
-export default function useFcmNotification() {
+// Dipanggil di luar React (mis. saat logout) untuk menghapus token FCM milik
+// device ini saja dari server, supaya device yang sudah logout tidak lagi
+// menerima notifikasi heads-up meski sebelumnya pernah mengizinkan notifikasi.
+export async function unregisterCurrentDeviceFcmToken() {
+  if (typeof window === "undefined" || !("Notification" in window)) return null;
+  if (Notification.permission !== "granted") return null;
+
+  try {
+    const messaging = await getFirebaseMessaging();
+    if (!messaging) return null;
+
+    const swRegistration = await navigator.serviceWorker.getRegistration(
+      "/firebase-messaging-sw.js",
+    );
+    if (!swRegistration) return null;
+
+    const token = await getToken(messaging, {
+      vapidKey: VAPID_KEY,
+      serviceWorkerRegistration: swRegistration,
+    });
+    if (!token) return null;
+
+    await ownerClient
+      .delete("/fcm-tokens/unregister", { data: { fcm_token: token } })
+      .catch((error) => {
+        console.error("Gagal menghapus FCM token di server saat logout:", error);
+      });
+
+    // Hapus juga token di sisi client supaya login berikutnya (device/user
+    // apapun) mendapat token FCM yang baru, bukan token lama yang sudah
+    // dihapus dari server.
+    await deleteToken(messaging).catch(() => {});
+
+    return token;
+  } catch (error) {
+    console.error("Gagal unregister FCM token saat logout:", error);
+    return null;
+  }
+}
+
+export default function useFcmNotification({ enabled = true } = {}) {
   const [permission, setPermission] = useState(
     typeof Notification !== "undefined"
       ? Notification.permission
@@ -75,15 +115,22 @@ export default function useFcmNotification() {
     }
   }, [fcmToken]);
 
-  // Auto-register saat hook pertama kali dipakai (dipasang di OwnerRoutes)
+  // Auto-register saat hook pertama kali dipakai (dipasang di OwnerRoutes).
+  // `enabled` harus mencerminkan status login owner yang sesungguhnya, agar
+  // device yang belum/tidak lagi login tidak diminta izin notifikasi dan
+  // tidak ikut terdaftar menerima push.
   useEffect(() => {
+    if (!enabled) return;
     if (permission === "granted" || permission === "default") {
       registerToken();
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled]);
 
   // Listener untuk notifikasi saat tab owner sedang aktif (foreground)
   useEffect(() => {
+    if (!enabled) return undefined;
+
     let unsubscribe;
 
     const setupForegroundListener = async () => {
@@ -110,7 +157,7 @@ export default function useFcmNotification() {
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, []);
+  }, [enabled]);
 
   return {
     permission,

@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useAuthStore } from "../stores/useAuthStore.js";
 import { toApiUrl } from "../lib/http/apiOrigin.js";
+import { unregisterCurrentDeviceFcmToken } from "../shared/hooks/useFcmNotification.js";
 
 const AUTH_URL = toApiUrl("/api/auth");
 
@@ -18,10 +19,16 @@ async function login(username, password) {
 async function logout() {
   const { role } = useAuthStore.getState();
   try {
+    // Hapus token FCM device ini dulu selagi sesi (cookie) masih valid,
+    // supaya device yang logout tidak terus menerima notifikasi heads-up.
+    let fcmToken = null;
+    if (role === "owner") {
+      fcmToken = await unregisterCurrentDeviceFcmToken();
+    }
     if (role) {
       await axios.post(
         toApiUrl(`/api/${role}/auth/logout`),
-        {},
+        fcmToken ? { fcm_token: fcmToken } : {},
         { withCredentials: true }
       );
     }
