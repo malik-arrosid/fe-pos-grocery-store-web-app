@@ -63,6 +63,35 @@ export const DaftarPelangganPage = () => {
     }
   };
 
+  const getPageNumbers = () => {
+    const total = meta.total_page || 1;
+    const current = currentPage;
+    const pages = [];
+
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (current <= 4) {
+        for (let i = 1; i <= 5; i++) pages.push(i);
+        pages.push("...");
+        pages.push(total);
+      } else if (current >= total - 3) {
+        pages.push(1);
+        pages.push("...");
+        for (let i = total - 4; i <= total; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push("...");
+        for (let i = current - 1; i <= current + 1; i++) pages.push(i);
+        pages.push("...");
+        pages.push(total);
+      }
+    }
+    return pages;
+  };
+
   const openCreate = () => {
     setForm({ nama_pelanggan: "", no_hp: "" });
     setEditingId(null);
@@ -221,14 +250,14 @@ export const DaftarPelangganPage = () => {
           ))}
 
           {meta.total_page > 0 && (
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 col-span-full">
               <div className="text-sm text-gray-500">
                 Menampilkan{" "}
                 {pelanggan.length > 0 ? (currentPage - 1) * limit + 1 : 0} -{" "}
                 {Math.min(currentPage * limit, meta.total_data)} dari{" "}
                 {meta.total_data} data
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap justify-center">
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage <= 1}
@@ -236,9 +265,30 @@ export const DaftarPelangganPage = () => {
                 >
                   <ChevronLeft size={18} />
                 </button>
-                <span className="px-3 py-1 text-sm">
-                  Halaman {currentPage} dari {meta.total_page}
-                </span>
+
+                {getPageNumbers().map((pageNum, index) =>
+                  pageNum === "..." ? (
+                    <span
+                      key={`ellipsis-${index}`}
+                      className="px-2 text-gray-500"
+                    >
+                      ...
+                    </span>
+                  ) : (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`px-3 py-1 rounded border ${
+                        currentPage === pageNum
+                          ? "bg-green-700 text-white border-green-700"
+                          : "hover:bg-gray-100"
+                      } cursor-pointer`}
+                    >
+                      {pageNum}
+                    </button>
+                  ),
+                )}
+
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage >= meta.total_page}

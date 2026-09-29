@@ -15,10 +15,6 @@ export default function Header() {
         return "Dashboard";
       case "/admin/daftar-barang":
         return "Daftar Barang";
-      case "/admin/histori-transaksi":
-        return "Histori Transaksi";
-      case "/admin/daftar-pelanggan":
-        return "Daftar Pelanggan";
       default:
         return activeTab || "Dashboard";
     }

@@ -32,11 +32,3 @@ export const downloadInvoiceOwner = (idTransaksi) =>
   ownerClient.get(`/transaksi/${idTransaksi}/invoice/download`, {
     responseType: "blob",
   });
-
-export const getDateRangeSales = (startDate, endDate) => {
-  const params = new URLSearchParams();
-  if (startDate) params.append("startDate", startDate);
-  if (endDate) params.append("endDate", endDate);
-  const query = params.toString();
-  return adminClient.get(`/transaksi/stats/date-range${query ? `?${query}` : ""}`);
-};

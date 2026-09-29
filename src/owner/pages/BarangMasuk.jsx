@@ -4,6 +4,7 @@ import { useBarangMasukStore } from "../../stores/useBarangMasukStore.js";
 import { useBarangMasuk } from "../../shared/hooks/useBarangMasuk.js";
 import { formatToRupiah } from "../../shared/utils/numberFormat.js";
 import { formatQty } from "../../shared/utils/qtyFormat.js";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function BarangMasuk() {
   const { setActiveTab } = useUIStore();
@@ -21,6 +22,45 @@ export default function BarangMasuk() {
   useEffect(() => {
     fetchBarangMasuk({ page, limit: 10 });
   }, [page]);
+
+  const totalPage = meta.total_page || 1;
+  const totalData = meta.total_data || 0;
+  const currentPage = meta.page || page;
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPage) {
+      setPage(newPage);
+    }
+  };
+
+  const getPageNumbers = () => {
+    const total = totalPage;
+    const current = currentPage;
+    const pages = [];
+
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (current <= 4) {
+        for (let i = 1; i <= 5; i++) pages.push(i);
+        pages.push("...");
+        pages.push(total);
+      } else if (current >= total - 3) {
+        pages.push(1);
+        pages.push("...");
+        for (let i = total - 4; i <= total; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push("...");
+        for (let i = current - 1; i <= current + 1; i++) pages.push(i);
+        pages.push("...");
+        pages.push(total);
+      }
+    }
+    return pages;
+  };
 
   return (
     <div className="flex-1 p-3 sm:p-6 bg-gray-50 min-h-screen">
@@ -72,7 +112,7 @@ export default function BarangMasuk() {
                   barangMasuk.map((item, index) => (
                     <tr key={item.id_barang_masuk} className="hover:bg-gray-50">
                       <td className="px-4 sm:px-6 py-3 sm:py-4 text-gray-700">
-                        {(page - 1) * 10 + index + 1}
+                        {(currentPage - 1) * 10 + index + 1}
                       </td>
                       <td className="px-4 sm:px-6 py-3 sm:py-4 text-gray-900 font-semibold">
                         {item.nama_barang}
@@ -97,25 +137,55 @@ export default function BarangMasuk() {
           </div>
 
           {/* Pagination */}
-          <div className="flex justify-end gap-2 mt-4">
-            <button
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-              className="px-3 py-1 border rounded disabled:opacity-50 cursor-pointer hover:bg-gray-100 disabled:cursor-not-allowed"
-            >
-              Prev
-            </button>
-            <span className="px-3 py-1">
-              Page {meta.page || 1} / {meta.total_page || 1}
-            </span>
-            <button
-              disabled={page >= (meta.total_page || 1)}
-              onClick={() => setPage((p) => p + 1)}
-              className="px-3 py-1 border rounded disabled:opacity-50 cursor-pointer hover:bg-gray-100 disabled:cursor-not-allowed"
-            >
-              Next
-            </button>
-          </div>
+          {totalPage > 0 && (
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-4">
+              <div className="text-sm text-gray-500">
+                Menampilkan{" "}
+                {barangMasuk.length > 0 ? (currentPage - 1) * 10 + 1 : 0} -{" "}
+                {Math.min(currentPage * 10, totalData)} dari {totalData} data
+              </div>
+              <div className="flex items-center gap-2 flex-wrap justify-center">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage <= 1}
+                  className="p-2 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+
+                {getPageNumbers().map((pageNum, index) =>
+                  pageNum === "..." ? (
+                    <span
+                      key={`ellipsis-${index}`}
+                      className="px-2 text-gray-500"
+                    >
+                      ...
+                    </span>
+                  ) : (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`px-3 py-1 rounded border ${
+                        currentPage === pageNum
+                          ? "bg-violet-700 text-white border-violet-700"
+                          : "hover:bg-gray-100"
+                      } cursor-pointer`}
+                    >
+                      {pageNum}
+                    </button>
+                  ),
+                )}
+
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage >= totalPage}
+                  className="p-2 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

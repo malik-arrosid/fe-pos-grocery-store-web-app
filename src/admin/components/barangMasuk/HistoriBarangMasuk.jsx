@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useBarangMasukStore } from "../../../stores/useBarangMasukStore.js";
 import { useBarangMasuk } from "../../../shared/hooks/useBarangMasuk.js";
 import { formatQty } from "../../../shared/utils/qtyFormat.js";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function HistoriBarangMasuk() {
   const { barangMasuk, setBarangMasuk } = useBarangMasukStore();
@@ -15,6 +16,45 @@ export default function HistoriBarangMasuk() {
   useEffect(() => {
     fetchBarangMasuk({ page, limit: 10 });
   }, [page]);
+
+  const totalPage = meta.total_page || 1;
+  const totalData = meta.total_data || 0;
+  const currentPage = meta.page || page;
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPage) {
+      setPage(newPage);
+    }
+  };
+
+  const getPageNumbers = () => {
+    const total = totalPage;
+    const current = currentPage;
+    const pages = [];
+
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (current <= 4) {
+        for (let i = 1; i <= 5; i++) pages.push(i);
+        pages.push("...");
+        pages.push(total);
+      } else if (current >= total - 3) {
+        pages.push(1);
+        pages.push("...");
+        for (let i = total - 4; i <= total; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push("...");
+        for (let i = current - 1; i <= current + 1; i++) pages.push(i);
+        pages.push("...");
+        pages.push(total);
+      }
+    }
+    return pages;
+  };
 
   if (loading) {
     return <p className="text-center py-6">Memuat riwayat...</p>;
@@ -47,7 +87,7 @@ export default function HistoriBarangMasuk() {
               barangMasuk.map((item, idx) => (
                 <tr key={item.id_barang_masuk} className="text-center">
                   <td className="border px-3 py-2">
-                    {(page - 1) * 10 + idx + 1}
+                    {(currentPage - 1) * 10 + idx + 1}
                   </td>
                   <td className="border px-3 py-2">{item.nama_barang}</td>
                   <td className="border px-3 py-2">
@@ -69,26 +109,56 @@ export default function HistoriBarangMasuk() {
         </table>
       </div>
 
-      {/* Pagination sederhana */}
-      <div className="flex justify-end gap-2 mt-4">
-        <button
-          disabled={page <= 1}
-          onClick={() => setPage((p) => p - 1)}
-          className="px-3 py-1 border rounded disabled:opacity-50 cursor-pointer"
-        >
-          Prev
-        </button>
-        <span className="px-3 py-1">
-          Page {meta.page} / {meta.total_page}
-        </span>
-        <button
-          disabled={page >= meta.total_page}
-          onClick={() => setPage((p) => p + 1)}
-          className="px-3 py-1 border rounded disabled:opacity-50 cursor-pointer"
-        >
-          Next
-        </button>
-      </div>
+      {/* Pagination */}
+      {totalPage > 0 && (
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-4">
+          <div className="text-sm text-gray-500">
+            Menampilkan{" "}
+            {barangMasuk.length > 0 ? (currentPage - 1) * 10 + 1 : 0} -{" "}
+            {Math.min(currentPage * 10, totalData)} dari {totalData} data
+          </div>
+          <div className="flex items-center gap-2 flex-wrap justify-center">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage <= 1}
+              className="p-2 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <ChevronLeft size={18} />
+            </button>
+
+            {getPageNumbers().map((pageNum, index) =>
+              pageNum === "..." ? (
+                <span
+                  key={`ellipsis-${index}`}
+                  className="px-2 text-gray-500"
+                >
+                  ...
+                </span>
+              ) : (
+                <button
+                  key={pageNum}
+                  onClick={() => handlePageChange(pageNum)}
+                  className={`px-3 py-1 rounded border ${
+                    currentPage === pageNum
+                      ? "bg-blue-500 text-white border-blue-500"
+                      : "hover:bg-gray-100"
+                  } cursor-pointer`}
+                >
+                  {pageNum}
+                </button>
+              ),
+            )}
+
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage >= totalPage}
+              className="p-2 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

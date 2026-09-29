@@ -18,12 +18,10 @@ export default function DashboardCards() {
       title: "Jumlah Barang Toko Kelontong",
       value: dashboardStats.totalBarang,
     },
-    { title: "Jumlah Transaksi", value: dashboardStats.totalTransaksi },
-    { title: "Jumlah Pelanggan", value: dashboardStats.totalPelanggan },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 my-6 mx-12">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 p-4 my-6 mx-12">
       {cardData.map(({ title, value }) => (
         <div
           key={title}

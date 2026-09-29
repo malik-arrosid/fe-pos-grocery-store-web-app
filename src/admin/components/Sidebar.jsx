@@ -4,8 +4,6 @@ import {
   LogOut,
   Menu,
   Package,
-  History,
-  Users,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -32,16 +30,6 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
       name: "Daftar Barang",
       icon: <List size={20} />,
       path: "/admin/daftar-barang",
-    },
-    {
-      name: "Histori Transaksi",
-      icon: <History size={20} />,
-      path: "/admin/histori-transaksi",
-    },
-    {
-      name: "Daftar Pelanggan",
-      icon: <Users size={20} />,
-      path: "/admin/daftar-pelanggan",
     },
   ];
 

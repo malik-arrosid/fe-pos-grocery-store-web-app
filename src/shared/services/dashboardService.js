@@ -11,16 +11,12 @@ const getCollectionTotal = (responseData) => {
 
 // Get dashboard stats
 const getDashboardStatsAdmin = async () => {
-  const [barangRes, transaksiRes, pelangganRes] = await Promise.all([
-    adminClient.get("/barang"),
-    adminClient.get("/transaksi"),
-    adminClient.get("/pelanggan"),
-  ]);
+  const barangRes = await adminClient.get("/barang");
 
   return {
     totalBarang: getCollectionTotal(barangRes.data),
-    totalTransaksi: getCollectionTotal(transaksiRes.data),
-    totalPelanggan: getCollectionTotal(pelangganRes.data),
+    totalTransaksi: 0,
+    totalPelanggan: 0,
   };
 };
 
