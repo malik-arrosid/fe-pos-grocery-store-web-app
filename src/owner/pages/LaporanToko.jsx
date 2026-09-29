@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
 import { useUIStore } from "../../stores/useUIStore.js";
 import LaporanTabs from "../components/laporanToko/LaporanTabs.jsx";
-import LaporanHarian from "../components/laporanToko/LaporanHarian.jsx";
 import LaporanMingguan from "../components/laporanToko/LaporanMingguan.jsx";
 import LaporanBulanan from "../components/laporanToko/LaporanBulanan.jsx";
 import LaporanTahunan from "../components/laporanToko/LaporanTahunan.jsx";
 
 export default function LaporanToko() {
   const { setActiveTab } = useUIStore();
-  const [activeTab, setActiveTabLocal] = useState("harian");
+  const [activeTab, setActiveTabLocal] = useState("mingguan");
 
   useEffect(() => {
     setActiveTab("Laporan Toko");
@@ -19,7 +18,6 @@ export default function LaporanToko() {
       <div className="p-3 sm:p-6">
         <LaporanTabs activeTab={activeTab} onChange={setActiveTabLocal} />
         <div className="bg-white rounded-lg shadow">
-          {activeTab === "harian" && <LaporanHarian />}
           {activeTab === "mingguan" && <LaporanMingguan />}
           {activeTab === "bulanan" && <LaporanBulanan />}
           {activeTab === "tahunan" && <LaporanTahunan />}

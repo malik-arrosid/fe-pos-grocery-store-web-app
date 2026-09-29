@@ -8,12 +8,6 @@ export default function LaporanTabs({ activeTab, onChange }) {
     <div className="mb-4 overflow-x-auto">
       <div className="inline-flex border rounded-t min-w-full sm:min-w-0">
         <button
-          className={`${tabClass("harian")} cursor-pointer`}
-          onClick={() => onChange("harian")}
-        >
-          Laporan Harian
-        </button>
-        <button
           className={`${tabClass("mingguan")} cursor-pointer`}
           onClick={() => onChange("mingguan")}
         >

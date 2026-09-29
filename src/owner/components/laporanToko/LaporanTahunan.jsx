@@ -106,7 +106,7 @@ export default function LaporanTahunan() {
         </div>
       ) : reportData?.summary ? (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-6 sm:mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 mb-6 sm:mb-8">
             <div className="bg-violet-700 text-white p-4 sm:p-6 rounded-lg shadow-lg">
               <h3 className="font-semibold text-base sm:text-lg">
                 Total Transaksi
@@ -122,15 +122,6 @@ export default function LaporanTahunan() {
               </h3>
               <p className="text-xl sm:text-3xl font-bold mt-2">
                 {formatToRupiah(reportData.summary.total_pendapatan)}
-              </p>
-            </div>
-
-            <div className="bg-violet-700 text-white p-4 sm:p-6 rounded-lg shadow-lg">
-              <h3 className="font-semibold text-base sm:text-lg">
-                Jumlah Pelanggan Berbeda
-              </h3>
-              <p className="text-2xl sm:text-4xl font-bold mt-2">
-                {reportData.summary.total_pelanggan_unik}
               </p>
             </div>
           </div>
