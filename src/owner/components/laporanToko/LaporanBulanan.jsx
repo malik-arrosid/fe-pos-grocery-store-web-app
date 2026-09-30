@@ -117,13 +117,6 @@ export default function LaporanBulanan() {
               {formatToRupiah(reportData.total_pendapatan)}
             </p>
           </div>
-
-          {/* <div className="bg-violet-700 text-white p-4 sm:p-6 rounded-lg shadow-lg">
-            <h3 className="font-semibold text-base sm:text-lg">Jumlah Transaksi per Hari yang Berhasil</h3>
-            <p className="text-2xl sm:text-4xl font-bold mt-2">
-              {reportData.total_hari_transaksi}
-            </p>
-          </div> */}
         </div>
       ) : (
         <div className="text-center py-20">

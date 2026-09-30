@@ -10,6 +10,8 @@ export default function BarangMasuk() {
   const { setActiveTab } = useUIStore();
   const { barangMasuk, setBarangMasuk } = useBarangMasukStore();
   const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState("");
+  const [keyword, setKeyword] = useState("");
   const { fetchBarangMasuk, loading, meta } = useBarangMasuk({
     setBarangMasuk,
     mode: "owner",
@@ -20,8 +22,8 @@ export default function BarangMasuk() {
   }, []);
 
   useEffect(() => {
-    fetchBarangMasuk({ page, limit: 10 });
-  }, [page]);
+    fetchBarangMasuk({ page, limit: 10, keyword });
+  }, [page, keyword]);
 
   const totalPage = meta.total_page || 1;
   const totalData = meta.total_data || 0;
@@ -30,6 +32,18 @@ export default function BarangMasuk() {
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPage) {
       setPage(newPage);
+    }
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const nextKeyword = searchInput.trim();
+
+    setKeyword(nextKeyword);
+    if (page !== 1) {
+      setPage(1);
+    } else {
+      fetchBarangMasuk({ page: 1, limit: 10, keyword: nextKeyword });
     }
   };
 
@@ -69,6 +83,23 @@ export default function BarangMasuk() {
           Riwayat Barang Masuk
         </h1>
       </div>
+      <form onSubmit={handleSearch} className="mb-4 sm:mb-6">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Cari nama barang masuk..."
+            className="w-full p-3 pr-24 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-violet-400"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+          />
+          <button
+            type="submit"
+            className="absolute right-1 top-1 bottom-1 px-4 rounded-md bg-violet-700 text-white hover:bg-violet-800 active:bg-violet-900 cursor-pointer"
+          >
+            Cari
+          </button>
+        </div>
+      </form>
 
       {loading ? (
         <div className="flex items-center justify-center py-20">

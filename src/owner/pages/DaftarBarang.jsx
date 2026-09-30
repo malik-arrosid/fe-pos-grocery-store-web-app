@@ -101,20 +101,22 @@ export default function DaftarBarang() {
       </div>
 
       {/* Search */}
-      <form onSubmit={handleSearch} className="mb-4 sm:mb-6 flex gap-2">
-        <input
-          type="text"
-          placeholder="Cari barang..."
-          className="w-full sm:w-1/2 px-3 sm:px-4 py-2 border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        <button
-          type="submit"
-          className="px-4 py-2 bg-violet-700 text-white rounded hover:bg-violet-800 text-sm cursor-pointer"
-        >
-          Cari
-        </button>
+      <form onSubmit={handleSearch} className="mb-4 sm:mb-6">
+        <div className="relative w-full sm:w-1/2">
+          <input
+            type="text"
+            placeholder="Cari barang..."
+            className="w-full p-3 pr-24 rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <button
+            type="submit"
+            className="absolute right-1 top-1 bottom-1 px-4 rounded-md bg-violet-700 text-white hover:bg-violet-800 active:bg-violet-900 cursor-pointer"
+          >
+            Cari
+          </button>
+        </div>
       </form>
 
       {loading ? (
@@ -189,8 +191,7 @@ export default function DaftarBarang() {
               <div className="text-sm text-gray-500">
                 Menampilkan{" "}
                 {barang.length > 0 ? (currentPage - 1) * LIMIT + 1 : 0} -{" "}
-                {Math.min(currentPage * LIMIT, totalData)} dari {totalData}{" "}
-                data
+                {Math.min(currentPage * LIMIT, totalData)} dari {totalData} data
               </div>
               <div className="flex items-center gap-2 flex-wrap justify-center">
                 <button

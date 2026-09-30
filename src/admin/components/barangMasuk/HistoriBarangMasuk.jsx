@@ -7,6 +7,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 export default function HistoriBarangMasuk() {
   const { barangMasuk, setBarangMasuk } = useBarangMasukStore();
   const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState("");
+  const [keyword, setKeyword] = useState("");
 
   const { fetchBarangMasuk, meta, loading } = useBarangMasuk({
     setBarangMasuk,
@@ -14,8 +16,8 @@ export default function HistoriBarangMasuk() {
   });
 
   useEffect(() => {
-    fetchBarangMasuk({ page, limit: 10 });
-  }, [page]);
+    fetchBarangMasuk({ page, limit: 10, keyword });
+  }, [page, keyword]);
 
   const totalPage = meta.total_page || 1;
   const totalData = meta.total_data || 0;
@@ -24,6 +26,18 @@ export default function HistoriBarangMasuk() {
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPage) {
       setPage(newPage);
+    }
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const nextKeyword = searchInput.trim();
+
+    setKeyword(nextKeyword);
+    if (page !== 1) {
+      setPage(1);
+    } else {
+      fetchBarangMasuk({ page: 1, limit: 10, keyword: nextKeyword });
     }
   };
 
@@ -63,6 +77,23 @@ export default function HistoriBarangMasuk() {
   return (
     <div>
       <h3 className="text-lg font-semibold mb-4">Riwayat Barang Masuk</h3>
+      <form onSubmit={handleSearch} className="mb-4">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Cari nama barang masuk..."
+            className="w-full p-3 pr-24 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+          />
+          <button
+            type="submit"
+            className="absolute right-1 top-1 bottom-1 px-4 rounded-md bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-700 cursor-pointer"
+          >
+            Cari
+          </button>
+        </div>
+      </form>
 
       <div className="overflow-x-auto">
         <table className="min-w-full">

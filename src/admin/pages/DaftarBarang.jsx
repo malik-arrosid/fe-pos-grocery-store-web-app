@@ -11,7 +11,7 @@ import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function DaftarBarang() {
   const navigate = useNavigate();
-  const { activeTab, setActiveTab } = useUIStore();
+  const { setActiveTab } = useUIStore();
   const { barang, setBarang, searchQuery, setSearchQuery } = useBarangStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentBarang, setCurrentBarang] = useState(null);
@@ -97,16 +97,6 @@ export default function DaftarBarang() {
       <div className="p-6">
         <div className="flex justify-between mb-6">
           <h1 className="text-2xl font-bold">Daftar Barang</h1>
-          {/* <button
-            onClick={() => {
-              setCurrentBarang(null);
-              setIsModalOpen(true);
-            }}
-            className="bg-400 text-900 px-4 py-2 rounded-lg font-semibold hover:bg-500"
-          >
-            Tambah Barang
-          </button> */}
-
           <div className="text-sm">
             Untuk menambah barang baru atau menambah stok, gunakan menu{" "}
             <button
