@@ -2,13 +2,10 @@ import { useState } from "react";
 import Swal from "sweetalert2";
 import {
   createTransaksi,
-  getHistoriTransaksiAdmin,
   getHistoriTransaksiKasir,
   getHistoriTransaksiOwner,
-  searchTransaksiAdmin,
   searchTransaksiKasir,
   searchTransaksiOwner,
-  getDetailTransaksiAdmin,
   getDetailTransaksiKasir,
   getDetailTransaksiOwner,
   downloadInvoiceKasir,
@@ -34,10 +31,7 @@ export function useTransaksi({ mode }) {
     try {
       let res;
 
-      // Pilih service berdasarkan mode
-      if (mode === "admin") {
-        res = await getHistoriTransaksiAdmin({ page, limit });
-      } else if (mode === "kasir") {
+      if (mode === "kasir") {
         res = await getHistoriTransaksiKasir({ page, limit });
       } else if (mode === "owner") {
         res = await getHistoriTransaksiOwner({ page, limit });
@@ -84,9 +78,7 @@ export function useTransaksi({ mode }) {
     try {
       let res;
 
-      if (mode === "admin") {
-        res = await searchTransaksiAdmin(trimmedKeyword, { page, limit });
-      } else if (mode === "kasir") {
+      if (mode === "kasir") {
         res = await searchTransaksiKasir(trimmedKeyword, { page, limit });
       } else if (mode === "owner") {
         res = await searchTransaksiOwner(trimmedKeyword, { page, limit });
@@ -126,9 +118,7 @@ export function useTransaksi({ mode }) {
     setError(null);
     try {
       let res;
-      if (mode === "admin") {
-        res = await getDetailTransaksiAdmin(id);
-      } else if (mode === "kasir") {
+      if (mode === "kasir") {
         res = await getDetailTransaksiKasir(id);
       } else if (mode === "owner") {
         res = await getDetailTransaksiOwner(id);

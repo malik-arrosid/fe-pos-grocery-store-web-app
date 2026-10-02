@@ -21,6 +21,7 @@ export const searchTransaksiOwner = (keyword, params = {}) =>
 
 export const getDetailTransaksiKasir = (id) =>
   kasirClient.get(`/transaksi/${id}`);
+
 export const getDetailTransaksiOwner = (id) =>
   ownerClient.get(`/transaksi/${id}`);
 
@@ -28,6 +29,7 @@ export const downloadInvoiceKasir = (idTransaksi) =>
   kasirClient.get(`/transaksi/${idTransaksi}/invoice/download`, {
     responseType: "blob",
   });
+  
 export const downloadInvoiceOwner = (idTransaksi) =>
   ownerClient.get(`/transaksi/${idTransaksi}/invoice/download`, {
     responseType: "blob",

@@ -25,7 +25,8 @@ export default function LaporanMingguan() {
             month: "short",
           }),
           date: d.date_iso,
-          total: d.total_harian,
+          total: Number(d.total_harian || 0),
+          totalTransaksi: Number(d.total_transaksi_harian || 0),
         }));
         setWeeklyData(mapped);
       } catch (error) {
@@ -39,6 +40,10 @@ export default function LaporanMingguan() {
   }, []);
 
   const totalPendapatan = weeklyData.reduce((sum, item) => sum + item.total, 0);
+  const totalTransaksi = weeklyData.reduce(
+    (sum, item) => sum + item.totalTransaksi,
+    0,
+  );
 
   if (loading) {
     return (
@@ -61,13 +66,23 @@ export default function LaporanMingguan() {
         </p>
       </div>
 
-      <div className="bg-violet-700 text-white p-4 sm:p-6 rounded-lg shadow-lg mb-4 sm:mb-6">
-        <h3 className="font-semibold text-base sm:text-lg">
-          Total Penjualan (7 Hari)
-        </h3>
-        <p className="text-2xl sm:text-4xl font-bold mt-2">
-          {formatToRupiah(totalPendapatan)}
-        </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 mb-4 sm:mb-6">
+        <div className="bg-violet-700 text-white p-4 sm:p-6 rounded-lg shadow-lg">
+          <h3 className="font-semibold text-base sm:text-lg">
+            Total Penjualan (7 Hari)
+          </h3>
+          <p className="text-2xl sm:text-4xl font-bold mt-2">
+            {formatToRupiah(totalPendapatan)}
+          </p>
+        </div>
+        <div className="bg-violet-700 text-white p-4 sm:p-6 rounded-lg shadow-lg">
+          <h3 className="font-semibold text-base sm:text-lg">
+            Total Transaksi (7 Hari)
+          </h3>
+          <p className="text-2xl sm:text-4xl font-bold mt-2">
+            {totalTransaksi.toLocaleString("id-ID")}
+          </p>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow p-3 sm:p-6 mb-4 sm:mb-6">
@@ -112,6 +127,9 @@ export default function LaporanMingguan() {
             <thead className="bg-violet-800 text-white">
               <tr>
                 <th className="px-2 sm:px-4 py-3 text-left">Tanggal</th>
+                <th className="px-2 sm:px-4 py-3 text-right">
+                  Jumlah Transaksi
+                </th>
                 <th className="px-2 sm:px-4 py-3 text-right">Penjualan</th>
               </tr>
             </thead>
@@ -122,6 +140,9 @@ export default function LaporanMingguan() {
                   className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
                 >
                   <td className="px-2 sm:px-4 py-3">{item.date}</td>
+                  <td className="px-2 sm:px-4 py-3 text-right">
+                    {item.totalTransaksi.toLocaleString("id-ID")}
+                  </td>
                   <td className="px-2 sm:px-4 py-3 text-right font-semibold">
                     {formatToRupiah(item.total)}
                   </td>
@@ -131,6 +152,9 @@ export default function LaporanMingguan() {
             <tfoot className="bg-violet-700 text-white font-bold">
               <tr>
                 <td className="px-2 sm:px-4 py-3">Total</td>
+                <td className="px-2 sm:px-4 py-3 text-right">
+                  {totalTransaksi.toLocaleString("id-ID")}
+                </td>
                 <td className="px-2 sm:px-4 py-3 text-right">
                   {formatToRupiah(totalPendapatan)}
                 </td>
