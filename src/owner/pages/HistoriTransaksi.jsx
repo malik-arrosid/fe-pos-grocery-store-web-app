@@ -2,29 +2,68 @@ import { useEffect, useState } from "react";
 import { useUIStore } from "../../stores/useUIStore.js";
 import { formatToRupiah } from "../../shared/utils/numberFormat.js";
 import { useNavigate } from "react-router-dom";
-import { Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { Eye, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useTransaksi } from "../../shared/hooks/useTransaksi.js";
 
 export default function HistoriTransaksi() {
   const { setActiveTab } = useUIStore();
-  const { historiTransaksi, fetchHistoriTransaksi, loading, meta } =
-    useTransaksi({ mode: "owner" });
+  const {
+    historiTransaksi,
+    fetchHistoriTransaksi,
+    searchHistoriTransaksi,
+    loading,
+    meta,
+  } = useTransaksi({ mode: "owner" });
   const [searchTerm, setSearchTerm] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState(10);
   const navigate = useNavigate();
 
   useEffect(() => {
     setActiveTab("Histori Transaksi");
-    fetchHistoriTransaksi(currentPage, limit);
-  }, [currentPage]);
+  }, [setActiveTab]);
 
-  const filteredTransactions = historiTransaksi.filter((transaction) =>
-    transaction.kode_transaksi
-      ?.toLowerCase()
-      .includes(searchTerm.toLowerCase()),
-  );
-  
+  // Setiap kali kata kunci atau halaman berubah, cari ulang ke server
+  // (bukan memfilter data di halaman aktif saja) lalu reset ke halaman 1.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const trimmed = searchTerm.trim();
+      if (trimmed) {
+        setIsSearching(true);
+        searchHistoriTransaksi(trimmed, currentPage, limit);
+      } else {
+        setIsSearching(false);
+        fetchHistoriTransaksi(currentPage, limit);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, currentPage]);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+      return;
+    }
+    const trimmed = searchTerm.trim();
+    if (trimmed) {
+      setIsSearching(true);
+      searchHistoriTransaksi(trimmed, 1, limit);
+    } else {
+      setIsSearching(false);
+      fetchHistoriTransaksi(1, limit);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm("");
+    setIsSearching(false);
+    setCurrentPage(1);
+  };
+
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= meta.total_page) {
       setCurrentPage(newPage);
@@ -76,15 +115,33 @@ export default function HistoriTransaksi() {
         </h1>
       </div>
 
-      <div className="mb-4 sm:mb-6">
-        <input
-          type="text"
-          placeholder="Cari berdasarkan ID Transaksi..."
-          className="w-full sm:w-1/2 px-3 sm:px-4 py-2 border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
+      <form onSubmit={handleSearch} className="mb-4 sm:mb-6">
+        <div className="relative w-full sm:w-1/2">
+          <input
+            type="text"
+            placeholder="Cari berdasarkan Kode Transaksi..."
+            className="w-full px-3 sm:px-4 py-2 pr-24 border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="absolute right-20 top-1 bottom-1 px-3 text-gray-500 hover:text-gray-800 cursor-pointer"
+              aria-label="Bersihkan pencarian"
+            >
+              <X size={18} />
+            </button>
+          )}
+          <button
+            type="submit"
+            className="absolute right-1 top-1 bottom-1 px-4 rounded-md bg-violet-700 text-white hover:bg-violet-800 active:bg-violet-900 cursor-pointer"
+          >
+            Cari
+          </button>
+        </div>
+      </form>
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -98,7 +155,7 @@ export default function HistoriTransaksi() {
               <thead className="bg-violet-800 text-white">
                 <tr>
                   <th className="px-4 sm:px-6 py-3 text-left font-bold">
-                    ID Transaksi
+                    Kode Transaksi
                   </th>
                   <th className="px-4 sm:px-6 py-3 text-left font-bold">
                     Tanggal
@@ -118,19 +175,19 @@ export default function HistoriTransaksi() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredTransactions.length === 0 ? (
+                {historiTransaksi.length === 0 ? (
                   <tr>
                     <td
                       colSpan="6"
                       className="px-4 sm:px-6 py-4 text-center text-gray-500"
                     >
-                      {searchTerm
+                      {isSearching
                         ? "Tidak ada transaksi ditemukan"
                         : "Belum ada transaksi"}
                     </td>
                   </tr>
                 ) : (
-                  filteredTransactions.map((transaction) => (
+                  historiTransaksi.map((transaction) => (
                     <tr
                       key={transaction.id_transaksi}
                       className="hover:bg-gray-50"
@@ -180,14 +237,14 @@ export default function HistoriTransaksi() {
 
           {/* Card View - Mobile */}
           <div className="md:hidden space-y-3">
-            {filteredTransactions.length === 0 ? (
+            {historiTransaksi.length === 0 ? (
               <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
-                {searchTerm
+                {isSearching
                   ? "Tidak ada transaksi ditemukan"
                   : "Belum ada transaksi"}
               </div>
             ) : (
-              filteredTransactions.map((transaction) => (
+              historiTransaksi.map((transaction) => (
                 <div
                   key={transaction.id_transaksi}
                   className="bg-white rounded-lg shadow p-4"
@@ -242,7 +299,7 @@ export default function HistoriTransaksi() {
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-4">
               <div className="text-sm text-gray-500">
                 Menampilkan{" "}
-                {filteredTransactions.length > 0
+                {historiTransaksi.length > 0
                   ? (currentPage - 1) * limit + 1
                   : 0}{" "}
                 - {Math.min(currentPage * limit, meta.total_data)} dari{" "}

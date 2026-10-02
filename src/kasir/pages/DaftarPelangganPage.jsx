@@ -153,7 +153,7 @@ export const DaftarPelangganPage = () => {
           <input
             type="text"
             placeholder="Cari pelanggan (nama atau no HP)..."
-            className="w-full px-4 py-2 pl-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full px-4 py-2 pl-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />

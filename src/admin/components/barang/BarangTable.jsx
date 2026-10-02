@@ -6,7 +6,7 @@ export default function BarangTable({
   isLoading,
   error,
   onEdit,
-  onDelete,
+  // onDelete,
   openModal,
   pageOffset = 0,
 }) {
@@ -27,47 +27,6 @@ export default function BarangTable({
     );
   }
 
-  // const parseGramInteger = (v) => {
-  //   if (v === null || v === undefined) return 0;
-  //   if (typeof v === "number" && Number.isFinite(v)) return Math.trunc(v);
-
-  //   const s = String(v).trim();
-  //   if (s === "") return 0;
-
-  //   const cleaned = s.replace(/[^\d-]/g, "");
-  //   if (cleaned === "" || cleaned === "-") return 0;
-
-  //   const n = parseInt(cleaned, 10);
-  //   return Number.isFinite(n) ? n : 0;
-  // };
-
-  // const formatKg = (kg) => {
-  //   const num = Number(kg);
-  //   if (!isFinite(num)) return "-";
-  //   const rounded = Math.round((num + Number.EPSILON) * 10000) / 10000; // 4 decimal precision
-  //   return String(rounded).replace(/\.?0+$/, "");
-  // };
-
-  // const formatStok = (stokRaw, satuanRaw) => {
-  //   const stok = parseGramInteger(stokRaw);
-  //   const satuan = String(satuanRaw ?? "")
-  //     .trim()
-  //     .toUpperCase();
-
-  //   if (!Number.isFinite(stok)) return "-";
-
-  //   if (satuan === "GRAM" || satuan === "G") {
-  //     if (stok >= 1000) {
-  //       // KONVERSI TEPAT: hanya sekali /1000
-  //       return `${formatKg(stok / 1000)} kg`;
-  //     }
-  //     return `${stok} gr`;
-  //   }
-
-  //   const displaySatuan = satuan ? satuan.toLowerCase() : "pcs";
-  //   return `${stok} ${displaySatuan}`;
-  // };
-
   return (
     <div className="rounded-lg shadow">
       <table className="min-w-full">
@@ -77,7 +36,6 @@ export default function BarangTable({
               "No",
               "Nama Barang",
               "Stok",
-              "Kategori",
               "Harga Jual",
               "Harga Beli",
               "Tindakan",
@@ -127,9 +85,9 @@ export default function BarangTable({
                 <td className="px-6 py-4 whitespace-nowrap text-sm border">
                   {formatQty(item.stok_dasar, item.satuan_dasar)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm border">
+                {/* <td className="px-6 py-4 whitespace-nowrap text-sm border">
                   {item.kategori_barang}
-                </td>
+                </td> */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm border">
                   {formatToRupiah(item.harga_jual_per_sd)}
                 </td>
@@ -146,12 +104,6 @@ export default function BarangTable({
                   >
                     Edit
                   </button>
-                  {/* <button
-                    onClick={() => onDelete(item.id_barang)}
-                    className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-700 cursor-pointer"
-                  >
-                    Hapus
-                  </button> */}
                 </td>
               </tr>
             ))

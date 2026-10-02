@@ -3,24 +3,25 @@ import { useTransaksi } from "../../shared/hooks/useTransaksi.js";
 import { formatToRupiah } from "../../shared/utils/numberFormat.js";
 import { useNavigate } from "react-router-dom";
 import {
-  FileText,
-  Printer,
+  Download,
   Eye,
   ChevronLeft,
   ChevronRight,
+  X,
 } from "lucide-react";
 import { useUIStore } from "../../stores/useUIStore.js";
 
 export const HistoriTransaksiPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
   const {
     historiTransaksi,
     fetchHistoriTransaksi,
+    searchHistoriTransaksi,
     loading,
     meta,
     downloadInvoice,
   } = useTransaksi({ mode: "kasir" });
-  // const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState(10);
   const navigate = useNavigate();
@@ -28,12 +29,47 @@ export const HistoriTransaksiPage = () => {
 
   useEffect(() => {
     setActiveTab("Histori Transaksi");
-    fetchHistoriTransaksi(currentPage, limit);
-  }, [currentPage]);
+  }, [setActiveTab]);
 
-  const filteredTransactions = historiTransaksi.filter((transaction) =>
-    transaction.kode_transaksi.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  // Setiap kali kata kunci atau halaman berubah, cari ulang ke server
+  // (bukan memfilter data di halaman aktif saja) lalu reset ke halaman 1.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const trimmed = searchTerm.trim();
+      if (trimmed) {
+        setIsSearching(true);
+        searchHistoriTransaksi(trimmed, currentPage, limit);
+      } else {
+        setIsSearching(false);
+        fetchHistoriTransaksi(currentPage, limit);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, currentPage]);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+      return;
+    }
+    const trimmed = searchTerm.trim();
+    if (trimmed) {
+      setIsSearching(true);
+      searchHistoriTransaksi(trimmed, 1, limit);
+    } else {
+      setIsSearching(false);
+      fetchHistoriTransaksi(1, limit);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm("");
+    setIsSearching(false);
+    setCurrentPage(1);
+  };
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= meta.total_page) {
@@ -87,18 +123,11 @@ export const HistoriTransaksiPage = () => {
     <div className="flex gap-1 sm:gap-2 justify-center">
       <button
         onClick={() => downloadInvoice(transaction.id_transaksi)}
-        title="Lihat Invoice"
+        title="Unduh File Invoice PDF"
         className="cursor-pointer p-1.5 sm:p-2 bg-blue-600 text-white rounded hover:bg-blue-700"
       >
-        <FileText size={15} />
+        <Download size={15} />
       </button>
-      {/* <button
-        onClick={() => downloadInvoice(transaction.id_transaksi)}
-        title="Cetak"
-        className="cursor-pointer p-1.5 sm:p-2 bg-green-700 text-white rounded hover:bg-green-800"
-      >
-        <Printer size={15} />
-      </button> */}
       <button
         onClick={() =>
           navigate(`/kasir/detail-transaksi/${transaction.id_transaksi}`)
@@ -122,60 +151,82 @@ export const HistoriTransaksiPage = () => {
         </div>
       </div>
 
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder="Cari berdasarkan ID Transaksi..."
-          className="w-full sm:w-1/2 px-3 sm:px-4 py-2 border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 text-sm"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
+      <form onSubmit={handleSearch} className="mb-4">
+        <div className="relative w-full sm:w-1/2">
+          <input
+            type="text"
+            placeholder="Cari berdasarkan Kode Transaksi..."
+            className="w-full px-3 sm:px-4 py-2 pr-24 border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 text-sm"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="absolute right-20 top-1 bottom-1 px-3 text-gray-500 hover:text-gray-800 cursor-pointer"
+              aria-label="Bersihkan pencarian"
+            >
+              <X size={18} />
+            </button>
+          )}
+          <button
+            type="submit"
+            className="absolute right-1 top-1 bottom-1 px-4 rounded-md bg-green-700 text-white hover:bg-green-800 active:bg-green-900 cursor-pointer"
+          >
+            Cari
+          </button>
+        </div>
+      </form>
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600" />
         </div>
-      ) : filteredTransactions.length === 0 ? (
-        <p className="text-center text-gray-500 py-10 text-sm">
-          Tidak ada transaksi ditemukan.
-        </p>
       ) : (
         <>
           {/* ── Mobile: card list (< 768px) ─────────────────────────────── */}
           <div className="flex flex-col gap-3 md:hidden">
-            {filteredTransactions.map((transaction) => (
-              <div
-                key={transaction.id_transaksi}
-                className="bg-white rounded-xl border shadow-sm p-4"
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <p className="font-semibold text-sm text-gray-900">
-                      {transaction.kode_transaksi}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {new Date(transaction.created_at).toLocaleDateString(
-                        "id-ID",
-                        { day: "2-digit", month: "short", year: "numeric" },
-                      )}
-                    </p>
-                  </div>
-                  <StatusBadge tipe={transaction.tipe_pelanggan} />
-                </div>
-                <div className="flex justify-between items-center text-sm mb-3">
-                  <span className="text-gray-500">
-                    {transaction.jumlah_item || 0} item
-                  </span>
-                  <span className="font-bold text-green-700">
-                    {formatToRupiah(parseFloat(transaction.total_harga))}
-                  </span>
-                </div>
-                <div className="flex justify-end">
-                  <ActionButtons transaction={transaction} />
-                </div>
+            {historiTransaksi.length === 0 ? (
+              <div className="bg-white rounded-xl border shadow-sm p-6 text-center text-gray-500 text-sm">
+                {isSearching
+                  ? "Tidak ada transaksi ditemukan"
+                  : "Belum ada transaksi"}
               </div>
-            ))}
+            ) : (
+              historiTransaksi.map((transaction) => (
+                <div
+                  key={transaction.id_transaksi}
+                  className="bg-white rounded-xl border shadow-sm p-4"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <p className="font-semibold text-sm text-gray-900">
+                        {transaction.kode_transaksi}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {new Date(transaction.created_at).toLocaleDateString(
+                          "id-ID",
+                          { day: "2-digit", month: "short", year: "numeric" },
+                        )}
+                      </p>
+                    </div>
+                    <StatusBadge tipe={transaction.tipe_pelanggan} />
+                  </div>
+                  <div className="flex justify-between items-center text-sm mb-3">
+                    <span className="text-gray-500">
+                      {transaction.jumlah_item || 0} item
+                    </span>
+                    <span className="font-bold text-green-700">
+                      {formatToRupiah(parseFloat(transaction.total_harga))}
+                    </span>
+                  </div>
+                  <div className="flex justify-end">
+                    <ActionButtons transaction={transaction} />
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
           {/* ── Tablet + Desktop: tabel (≥ 768px) ──────────────────────── */}
@@ -183,7 +234,7 @@ export const HistoriTransaksiPage = () => {
             <table className="min-w-full bg-white rounded-lg overflow-hidden">
               <thead className="bg-green-700 text-white">
                 <tr>
-                  <th className="py-3 px-4 text-left">ID Transaksi</th>
+                  <th className="py-3 px-4 text-left">Kode Transaksi</th>
                   <th className="py-3 px-4 text-left">Tanggal</th>
                   <th className="py-3 px-4 text-left">Qty Barang</th>
                   <th className="py-3 px-4 text-left">Total Harga</th>
@@ -192,7 +243,19 @@ export const HistoriTransaksiPage = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {filteredTransactions.map((transaction) => (
+                {historiTransaksi.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan="6"
+                      className="py-4 px-4 text-center text-gray-500 text-sm"
+                    >
+                      {isSearching
+                        ? "Tidak ada transaksi ditemukan"
+                        : "Belum ada transaksi"}
+                    </td>
+                  </tr>
+                ) : (
+                  historiTransaksi.map((transaction) => (
                   <tr
                     key={transaction.id_transaksi}
                     className="hover:bg-gray-50"
@@ -218,14 +281,15 @@ export const HistoriTransaksiPage = () => {
                       <ActionButtons transaction={transaction} />
                     </td>
                   </tr>
-                ))}
+                  ))
+                )}
               </tbody>
             </table>
             {!loading && meta.total_page > 0 && (
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-4">
                 <div className="text-sm text-gray-500">
                   Menampilkan{" "}
-                  {filteredTransactions.length > 0
+                  {historiTransaksi.length > 0
                     ? (currentPage - 1) * limit + 1
                     : 0}{" "}
                   - {Math.min(currentPage * limit, meta.total_data)} dari{" "}

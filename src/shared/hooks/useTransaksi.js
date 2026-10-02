@@ -5,6 +5,9 @@ import {
   getHistoriTransaksiAdmin,
   getHistoriTransaksiKasir,
   getHistoriTransaksiOwner,
+  searchTransaksiAdmin,
+  searchTransaksiKasir,
+  searchTransaksiOwner,
   getDetailTransaksiAdmin,
   getDetailTransaksiKasir,
   getDetailTransaksiOwner,
@@ -61,6 +64,55 @@ export function useTransaksi({ mode }) {
       console.error(err);
       setError(err.message);
       Swal.fire("Error", "Gagal memuat histori transaksi", "error");
+      return {
+        data: [],
+        meta: { page: 1, limit: 10, total_data: 0, total_page: 0 },
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const searchHistoriTransaksi = async (keyword, page = 1, limit = 10) => {
+    const trimmedKeyword = (keyword || "").trim();
+
+    if (!trimmedKeyword) {
+      return fetchHistoriTransaksi(page, limit);
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      let res;
+
+      if (mode === "admin") {
+        res = await searchTransaksiAdmin(trimmedKeyword, { page, limit });
+      } else if (mode === "kasir") {
+        res = await searchTransaksiKasir(trimmedKeyword, { page, limit });
+      } else if (mode === "owner") {
+        res = await searchTransaksiOwner(trimmedKeyword, { page, limit });
+      } else {
+        throw new Error(`Mode tidak dikenal: ${mode}`);
+      }
+
+      const data = (res.data.data || []).map((transaksi) => ({
+        ...transaksi,
+        total_harga: parseFloat(transaksi.total_harga) || 0,
+        jumlah_bayar: parseFloat(transaksi.jumlah_bayar) || 0,
+        kembalian: parseFloat(transaksi.kembalian) || 0,
+      }));
+
+      setHistoriTransaksi(data);
+
+      if (res.data.meta) {
+        setMeta(res.data.meta);
+      }
+
+      return { data, meta: res.data.meta };
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+      Swal.fire("Error", "Gagal mencari transaksi", "error");
       return {
         data: [],
         meta: { page: 1, limit: 10, total_data: 0, total_page: 0 },
@@ -142,6 +194,7 @@ export function useTransaksi({ mode }) {
     error,
     meta,
     fetchHistoriTransaksi,
+    searchHistoriTransaksi,
     fetchDetailTransaksi,
     addTransaksi,
     downloadInvoice: handleDownloadInvoice,

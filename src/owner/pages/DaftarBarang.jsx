@@ -133,9 +133,9 @@ export default function DaftarBarang() {
                   <th className="px-4 sm:px-6 py-3 text-left font-bold">
                     Nama Barang
                   </th>
-                  <th className="px-4 sm:px-6 py-3 text-left font-bold">
+                  {/* <th className="px-4 sm:px-6 py-3 text-left font-bold">
                     Kategori
-                  </th>
+                  </th> */}
                   <th className="px-4 sm:px-6 py-3 text-left font-bold">
                     Stok
                   </th>
@@ -166,9 +166,9 @@ export default function DaftarBarang() {
                       <td className="px-4 sm:px-6 py-3 sm:py-4 text-gray-900 font-semibold">
                         {item.nama_barang}
                       </td>
-                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-gray-700">
+                      {/* <td className="px-4 sm:px-6 py-3 sm:py-4 text-gray-700">
                         {item.kategori_barang}
-                      </td>
+                      </td> */}
                       <td className="px-4 sm:px-6 py-3 sm:py-4 text-gray-700">
                         {formatQty(item.stok_dasar, item.satuan_dasar)}
                       </td>

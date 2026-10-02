@@ -13,6 +13,21 @@ export const getHistoriTransaksiKasir = (params) =>
 export const getHistoriTransaksiOwner = (params) =>
   ownerClient.get("/transaksi", { params });
 
+export const searchTransaksiAdmin = (kodeTransaksi, params = {}) =>
+  adminClient.get("/transaksi/search", {
+    params: { kode_transaksi: kodeTransaksi, ...params },
+  });
+
+export const searchTransaksiKasir = (kodeTransaksi, params = {}) =>
+  kasirClient.get("/transaksi/search", {
+    params: { kode_transaksi: kodeTransaksi, ...params },
+  });
+
+export const searchTransaksiOwner = (kodeTransaksi, params = {}) =>
+  ownerClient.get("/transaksi/search", {
+    params: { kode_transaksi: kodeTransaksi, ...params },
+  });
+
 export const getDetailTransaksiAdmin = (id) =>
   adminClient.get(`/transaksi/${id}`);
 export const getDetailTransaksiKasir = (id) =>

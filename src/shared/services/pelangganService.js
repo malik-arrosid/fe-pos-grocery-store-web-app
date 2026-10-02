@@ -39,10 +39,18 @@ const searchPelangganKasir = (keyword, params = {}) => {
   return kasirClient.get(`/pelanggan/search`, { params: searchParams });
 };
 
-const searchPelangganOwner = (query, params) =>
-  ownerClient.get(`/pelanggan/search?query=${encodeURIComponent(query)}`, {
-    params,
-  });
+const searchPelangganOwner = (keyword, params = {}) => {
+  if (!keyword || keyword.trim() === "") {
+    return Promise.reject(new Error("Keyword pencarian tidak boleh kosong"));
+  }
+
+  const searchParams = {
+    keyword: keyword.trim(),
+    ...params,
+  };
+
+  return ownerClient.get(`/pelanggan/search`, { params: searchParams });
+};
 
 const createPelanggan = (data) => kasirClient.post("/pelanggan", data);
 const updatePelanggan = (id, data) => kasirClient.patch(`/pelanggan/${id}`, data);
