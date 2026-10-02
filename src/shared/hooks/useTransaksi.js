@@ -11,7 +11,6 @@ import {
   getDetailTransaksiAdmin,
   getDetailTransaksiKasir,
   getDetailTransaksiOwner,
-  downloadInvoiceAdmin,
   downloadInvoiceKasir,
   downloadInvoiceOwner,
 } from "../services/transaksiService.js";
@@ -161,9 +160,7 @@ export function useTransaksi({ mode }) {
   const handleDownloadInvoice = async (idTransaksi) => {
     try {
       let res;
-      if (mode === "admin") {
-        res = await downloadInvoiceAdmin(idTransaksi);
-      } else if (mode === "kasir") {
+      if (mode === "kasir") {
         res = await downloadInvoiceKasir(idTransaksi);
       } else if (mode === "owner") {
         res = await downloadInvoiceOwner(idTransaksi);

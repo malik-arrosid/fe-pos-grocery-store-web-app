@@ -76,6 +76,12 @@ export const HistoriTransaksiPage = () => {
       setCurrentPage(newPage);
     }
   };
+  const formatDate = (dateString) =>
+    new Date(dateString).toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
 
   const getPageNumbers = () => {
     const total = meta.total_page || 1;
@@ -155,7 +161,7 @@ export const HistoriTransaksiPage = () => {
         <div className="relative w-full sm:w-1/2">
           <input
             type="text"
-            placeholder="Cari berdasarkan Kode Transaksi..."
+            placeholder="Cari dengan Kode Transaksi atau Member..."
             className="w-full px-3 sm:px-4 py-2 pr-24 border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 text-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -205,10 +211,12 @@ export const HistoriTransaksiPage = () => {
                         {transaction.kode_transaksi}
                       </p>
                       <p className="text-xs text-gray-500 mt-0.5">
-                        {new Date(transaction.created_at).toLocaleDateString(
-                          "id-ID",
-                          { day: "2-digit", month: "short", year: "numeric" },
-                        )}
+                        {formatDate(transaction.created_at)}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-0.5">
+                        {transaction.tipe_pelanggan === "member"
+                          ? transaction.nama_pelanggan || "-"
+                          : "-"}
                       </p>
                     </div>
                     <StatusBadge tipe={transaction.tipe_pelanggan} />
@@ -239,6 +247,9 @@ export const HistoriTransaksiPage = () => {
                   <th className="py-3 px-4 text-left">Qty Barang</th>
                   <th className="py-3 px-4 text-left">Total Harga</th>
                   <th className="py-3 px-4 text-left">Tipe Pelanggan</th>
+                  <th className="py-3 px-4 text-left">
+                    Pelanggan
+                  </th>
                   <th className="py-3 px-4 text-center">Aksi</th>
                 </tr>
               </thead>
@@ -246,7 +257,7 @@ export const HistoriTransaksiPage = () => {
                 {historiTransaksi.length === 0 ? (
                   <tr>
                     <td
-                      colSpan="6"
+                      colSpan="7"
                       className="py-4 px-4 text-center text-gray-500 text-sm"
                     >
                       {isSearching
@@ -264,9 +275,7 @@ export const HistoriTransaksiPage = () => {
                       {transaction.kode_transaksi}
                     </td>
                     <td className="py-3 px-4 text-sm">
-                      {new Date(transaction.created_at).toLocaleDateString(
-                        "id-ID",
-                      )}
+                      {formatDate(transaction.created_at)}
                     </td>
                     <td className="py-3 px-4 text-sm">
                       {transaction.jumlah_item || "0"}
@@ -276,6 +285,11 @@ export const HistoriTransaksiPage = () => {
                     </td>
                     <td className="py-3 px-4">
                       <StatusBadge tipe={transaction.tipe_pelanggan} />
+                    </td>
+                    <td className="py-3 px-4 text-sm">
+                      {transaction.tipe_pelanggan === "member"
+                        ? transaction.nama_pelanggan || "-"
+                        : "-"}
                     </td>
                     <td className="py-3 px-4 flex justify-around">
                       <ActionButtons transaction={transaction} />

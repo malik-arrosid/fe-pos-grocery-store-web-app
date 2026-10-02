@@ -22,6 +22,12 @@ export default function HistoriBarangMasuk() {
   const totalPage = meta.total_page || 1;
   const totalData = meta.total_data || 0;
   const currentPage = meta.page || page;
+  const formatDate = (dateString) =>
+    new Date(dateString).toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPage) {
@@ -131,7 +137,7 @@ export default function HistoriBarangMasuk() {
                     Rp {Number(item.harga_beli_total).toLocaleString("id-ID")}
                   </td>
                   <td className="border px-3 py-2">
-                    {new Date(item.created_at).toLocaleDateString("id-ID")}
+                    {formatDate(item.created_at)}
                   </td>
                 </tr>
               ))

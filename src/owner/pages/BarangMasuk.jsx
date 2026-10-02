@@ -28,6 +28,12 @@ export default function BarangMasuk() {
   const totalPage = meta.total_page || 1;
   const totalData = meta.total_data || 0;
   const currentPage = meta.page || page;
+  const formatDate = (dateString) =>
+    new Date(dateString).toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPage) {
@@ -158,7 +164,7 @@ export default function BarangMasuk() {
                         {formatToRupiah(parseFloat(item.harga_beli_total))}
                       </td>
                       <td className="px-4 sm:px-6 py-3 sm:py-4 text-gray-700">
-                        {new Date(item.created_at).toLocaleDateString("id-ID")}
+                        {formatDate(item.created_at)}
                       </td>
                     </tr>
                   ))

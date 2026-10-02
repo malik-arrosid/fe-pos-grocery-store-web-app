@@ -119,7 +119,7 @@ export default function HistoriTransaksi() {
         <div className="relative w-full sm:w-1/2">
           <input
             type="text"
-            placeholder="Cari berdasarkan Kode Transaksi..."
+            placeholder="Cari dengan Kode Transaksi atau Member..."
             className="w-full px-3 sm:px-4 py-2 pr-24 border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -170,6 +170,9 @@ export default function HistoriTransaksi() {
                     Status Pelanggan
                   </th>
                   <th className="px-4 sm:px-6 py-3 text-left font-bold">
+                    Pelanggan
+                  </th>
+                  <th className="px-4 sm:px-6 py-3 text-left font-bold">
                     Aksi
                   </th>
                 </tr>
@@ -178,7 +181,7 @@ export default function HistoriTransaksi() {
                 {historiTransaksi.length === 0 ? (
                   <tr>
                     <td
-                      colSpan="6"
+                      colSpan="7"
                       className="px-4 sm:px-6 py-4 text-center text-gray-500"
                     >
                       {isSearching
@@ -214,6 +217,11 @@ export default function HistoriTransaksi() {
                             Guest
                           </span>
                         )}
+                      </td>
+                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-gray-700">
+                        {transaction.tipe_pelanggan === "member"
+                          ? transaction.nama_pelanggan || "-"
+                          : "-"}
                       </td>
                       <td className="px-4 sm:px-6 py-3 sm:py-4">
                         <button
@@ -256,6 +264,11 @@ export default function HistoriTransaksi() {
                       </p>
                       <p className="text-xs text-gray-500 mt-0.5">
                         {formatDate(transaction.created_at)}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-0.5">
+                        {transaction.tipe_pelanggan === "member"
+                          ? transaction.nama_pelanggan || "-"
+                          : "-"}
                       </p>
                     </div>
                     {transaction.tipe_pelanggan === "member" ? (

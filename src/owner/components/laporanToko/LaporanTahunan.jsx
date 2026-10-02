@@ -163,6 +163,9 @@ export default function LaporanTahunan() {
                 <thead className="bg-violet-800 text-white">
                   <tr>
                     <th className="px-2 sm:px-4 py-3 text-left">Bulan</th>
+                    <th className="px-2 sm:px-4 py-3 text-right">
+                      Jumlah Transaksi
+                    </th>
                     <th className="px-2 sm:px-4 py-3 text-right">Penjualan</th>
                   </tr>
                 </thead>
@@ -175,6 +178,11 @@ export default function LaporanTahunan() {
                       <td className="px-2 sm:px-4 py-3">
                         {monthNames[item.bulan - 1]} {selectedYear}
                       </td>
+                      <td className="px-2 sm:px-4 py-3 text-right">
+                        {Number(item.total_transaksi || 0).toLocaleString(
+                          "id-ID",
+                        )}
+                      </td>
                       <td className="px-2 sm:px-4 py-3 text-right font-semibold">
                         {formatToRupiah(item.pendapatan_bulanan)}
                       </td>
@@ -184,6 +192,11 @@ export default function LaporanTahunan() {
                 <tfoot className="bg-violet-700 text-white font-bold">
                   <tr>
                     <td className="px-2 sm:px-4 py-3">Total</td>
+                    <td className="px-2 sm:px-4 py-3 text-right">
+                      {Number(
+                        reportData.summary.total_transaksi || 0,
+                      ).toLocaleString("id-ID")}
+                    </td>
                     <td className="px-2 sm:px-4 py-3 text-right">
                       {formatToRupiah(reportData.summary.total_pendapatan)}
                     </td>
