@@ -9,12 +9,33 @@ const getCollectionTotal = (responseData) => {
   return Array.isArray(rows) ? rows.length : 0;
 };
 
+const getTodayRangeParams = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  const date = `${year}-${month}-${day}`;
+
+  return {
+    from_date: `${date} 00:00:00`,
+    to_date: `${date} 23:59:59`,
+    page: 1,
+    limit: 1,
+  };
+};
+
 // Get dashboard stats
 const getDashboardStatsAdmin = async () => {
-  const barangRes = await adminClient.get("/barang");
+  const [barangRes, barangMasukHariIniRes] = await Promise.all([
+    adminClient.get("/barang"),
+    adminClient.get("/barang-masuk", {
+      params: getTodayRangeParams(),
+    }),
+  ]);
 
   return {
     totalBarang: getCollectionTotal(barangRes.data),
+    totalBarangMasukHariIni: getCollectionTotal(barangMasukHariIniRes.data),
     totalTransaksi: 0,
     totalPelanggan: 0,
   };
@@ -29,6 +50,7 @@ const getDashboardStatsOwner = async () => {
 
   return {
     totalBarang: getCollectionTotal(barangRes.data),
+    totalBarangMasukHariIni: 0,
     totalTransaksi: getCollectionTotal(transaksiRes.data),
     totalPelanggan: getCollectionTotal(pelangganRes.data),
   };

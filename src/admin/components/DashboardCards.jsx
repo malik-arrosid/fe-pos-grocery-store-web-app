@@ -18,6 +18,10 @@ export default function DashboardCards() {
       title: "Jumlah Barang Toko Kelontong",
       value: dashboardStats.totalBarang,
     },
+    {
+      title: "Jumlah Barang Masuk Hari Ini",
+      value: dashboardStats.totalBarangMasukHariIni,
+    },
   ];
 
   return (

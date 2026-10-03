@@ -3,6 +3,7 @@ import { create } from "zustand";
 export const useDashboardStore = create((set) => ({
   dashboardStats: {
     totalBarang: 0,
+    totalBarangMasukHariIni: 0,
     totalTransaksi: 0,
     totalPelanggan: 0,
   },
@@ -15,6 +16,7 @@ export const useDashboardStore = create((set) => ({
     set({
       dashboardStats: {
         totalBarang: 0,
+        totalBarangMasukHariIni: 0,
         totalTransaksi: 0,
         totalPelanggan: 0,
       },
