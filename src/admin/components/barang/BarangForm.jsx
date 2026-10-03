@@ -21,19 +21,6 @@ export default function BarangForm({
         />
       </div>
 
-      <div className="mb-4">
-        <label className="block text-slate-700 text-sm font-bold mb-2">
-          Kategori Barang
-        </label>
-        <input
-          type="text"
-          name="kategori_barang"
-          defaultValue={currentBarang?.kategori_barang || ""}
-          required
-          className="shadow border rounded w-full py-2 px-3 text-slate-700"
-        />
-      </div>
-
       {/* Harga Jual */}
       <div className="mb-6">
         <label className="block text-slate-700 text-sm font-bold mb-2">
