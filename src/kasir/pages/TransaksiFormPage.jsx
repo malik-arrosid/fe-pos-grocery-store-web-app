@@ -37,7 +37,7 @@ export const TransaksiFormPage = () => {
   const navigate = useNavigate();
   const { setActiveTab } = useUIStore();
 
-  // ── Pelanggan ──────────────────────────────────────────
+  // State Pelanggan
   const { pelanggan, setPelanggan } = usePelangganStore();
   const { pelangganTerpilih, setPelangganTerpilih } = useTransaksiStore();
   const [custSearch, setCustSearch] = useState("");
@@ -46,23 +46,18 @@ export const TransaksiFormPage = () => {
     fetchPelanggan,
     search: searchPelanggan,
     loading: loadingPelanggan,
-  } = usePelanggan({ setPelanggan, mode: "kasir" });
+  } = usePelanggan({ searchQuery: custSearch, setPelanggan, mode: "kasir" });
 
-  // ── Barang ─────────────────────────────────────────────
+  // State Barang
   const {
     fetchBarang,
     groupedProducts,
-    categories,
     loading: loadingBarang,
   } = useBarang({ mode: "kasir" });
 
   const allProducts = useMemo(() => {
-    const list = [];
-    categories.forEach((cat) => {
-      (groupedProducts[cat] || []).forEach((p) => list.push(p));
-    });
-    return list;
-  }, [groupedProducts, categories]);
+    return Object.values(groupedProducts).flat();
+  }, [groupedProducts]);
 
   // ── Form state untuk satu item ─────────────────────────
   const [selectedProductId, setSelectedProductId] = useState("");
@@ -129,7 +124,7 @@ export const TransaksiFormPage = () => {
     if (!custSearch.trim()) {
       fetchPelanggan();
     } else {
-      searchPelanggan(custSearch);
+      searchPelanggan();
     }
   }, [custSearch]);
 
@@ -387,7 +382,7 @@ export const TransaksiFormPage = () => {
                 className="bg-green-700 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-800 cursor-pointer"
                 onClick={() => {
                   if (custSearch.trim()) {
-                    searchPelanggan(custSearch);
+                    searchPelanggan();
                   } else {
                     fetchPelanggan();
                   }
@@ -502,22 +497,16 @@ export const TransaksiFormPage = () => {
                   onChange={(e) => setSelectedProductId(e.target.value)}
                 >
                   <option value="">-- Pilih barang --</option>
-                  {categories.map((cat) =>
-                    (groupedProducts[cat] || []).length > 0 ? (
-                      <optgroup key={cat} label={cat}>
-                        {(groupedProducts[cat] || []).map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name} (Stok:{" "}
-                            {formatQty(
-                              p.stock ?? 0,
-                              p.satuan_dasar || p.satuan,
-                            )}
-                            )
-                          </option>
-                        ))}
-                      </optgroup>
-                    ) : null,
-                  )}
+                  {allProducts.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} (Stok:{" "}
+                      {formatQty(
+                        p.stock ?? 0,
+                        p.satuan_dasar || p.satuan,
+                      )}
+                      )
+                    </option>
+                  ))}
                 </select>
               )}
             </div>
