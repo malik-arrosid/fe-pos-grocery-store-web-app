@@ -9,6 +9,34 @@ import {
 import { formatToRupiah } from "../../shared/utils/numberFormat.js";
 import { formatQty } from "../../shared/utils/qtyFormat.js";
 
+const formatReportQty = (value, unit) => {
+  const satuan = String(unit ?? "")
+    .trim()
+    .toUpperCase();
+  const numericValue = Number(value);
+
+  if ((satuan === "GRAM" || satuan === "G") && Number.isFinite(numericValue)) {
+    if (numericValue >= 1000) {
+      const kgValue = numericValue / 1000;
+      const formattedKg = Number.isInteger(kgValue)
+        ? String(kgValue)
+        : kgValue.toLocaleString("id-ID", {
+            maximumFractionDigits: 3,
+          });
+      return `${formattedKg} kg`;
+    }
+
+    const formattedGram = Number.isInteger(numericValue)
+      ? String(numericValue)
+      : numericValue.toLocaleString("id-ID", {
+          maximumFractionDigits: 3,
+        });
+    return `${formattedGram} gr`;
+  }
+
+  return formatQty(value, unit);
+};
+
 const formatDetailDateTime = (dateValue) => {
   if (!dateValue) return "-";
 
@@ -372,7 +400,7 @@ export default function DetailNotifikasi() {
                                       {item.item_name}
                                     </td>
                                     <td className="px-3 py-2">
-                                      {formatQty(
+                                      {formatReportQty(
                                         item.quantity,
                                         item.satuan_dasar,
                                       )}
