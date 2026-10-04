@@ -1,10 +1,92 @@
 import { useEffect, useState, useCallback } from "react";
-import { getToken, deleteToken, onMessage } from "firebase/messaging";
+import * as firebaseMessaging from "firebase/messaging";
 import Swal from "sweetalert2";
 import { getFirebaseMessaging } from "../../lib/firebase/firebaseConfig.js";
 import ownerClient from "../../lib/http/ownerClient.js";
 
-const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+const VAPID_KEY = import.meta.env.FIREBASE_VAPID_KEY;
+const FCM_REGISTRATION_ID_STORAGE_KEY = "owner_fcm_registration_id";
+
+const readStoredRegistrationId = () => {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage.getItem(FCM_REGISTRATION_ID_STORAGE_KEY);
+  } catch (error) {
+    console.error("Gagal membaca FCM registration id dari storage:", error);
+    return null;
+  }
+};
+
+const writeStoredRegistrationId = (registrationId) => {
+  if (typeof window === "undefined") return;
+  try {
+    if (!registrationId) {
+      window.localStorage.removeItem(FCM_REGISTRATION_ID_STORAGE_KEY);
+      return;
+    }
+    window.localStorage.setItem(FCM_REGISTRATION_ID_STORAGE_KEY, registrationId);
+  } catch (error) {
+    console.error("Gagal menyimpan FCM registration id ke storage:", error);
+  }
+};
+
+const registerMessagingClient = async (messaging, swRegistration) => {
+  const registerFn = firebaseMessaging.register;
+  const onRegisteredFn = firebaseMessaging.onRegistered;
+
+  if (typeof registerFn === "function" && typeof onRegisteredFn === "function") {
+    const registrationId = await new Promise((resolve, reject) => {
+      let timeoutId = null;
+      const unsubscribe = onRegisteredFn(messaging, (fid) => {
+        if (timeoutId) clearTimeout(timeoutId);
+        unsubscribe();
+        resolve(fid || null);
+      });
+
+      timeoutId = setTimeout(() => {
+        unsubscribe();
+        reject(new Error("Timeout menunggu FID dari Firebase Messaging."));
+      }, 10000);
+
+      registerFn(messaging, {
+        vapidKey: VAPID_KEY,
+        serviceWorkerRegistration: swRegistration,
+      }).catch((error) => {
+        if (timeoutId) clearTimeout(timeoutId);
+        unsubscribe();
+        reject(error);
+      });
+    });
+
+    return registrationId;
+  }
+
+  const getTokenFn = firebaseMessaging.getToken;
+  if (typeof getTokenFn !== "function") {
+    throw new Error("Firebase Messaging tidak menyediakan API register/getToken.");
+  }
+
+  return getTokenFn(messaging, {
+    vapidKey: VAPID_KEY,
+    serviceWorkerRegistration: swRegistration,
+  });
+};
+
+const unregisterMessagingClient = async (messaging) => {
+  const unregisterFn = firebaseMessaging.unregister;
+  if (typeof unregisterFn === "function") {
+    await unregisterFn(messaging);
+    return;
+  }
+
+  const deleteTokenFn = firebaseMessaging.deleteToken;
+  if (typeof deleteTokenFn === "function") {
+    await deleteTokenFn(messaging);
+    return;
+  }
+
+  throw new Error("Firebase Messaging tidak menyediakan API unregister/deleteToken.");
+};
 
 // Dipanggil di luar React (mis. saat logout) untuk menghapus token FCM milik
 // device ini saja dari server, supaya device yang sudah logout tidak lagi
@@ -22,14 +104,13 @@ export async function unregisterCurrentDeviceFcmToken() {
     );
     if (!swRegistration) return null;
 
-    const token = await getToken(messaging, {
-      vapidKey: VAPID_KEY,
-      serviceWorkerRegistration: swRegistration,
-    });
-    if (!token) return null;
+    const registrationId =
+      readStoredRegistrationId() ||
+      (await registerMessagingClient(messaging, swRegistration));
+    if (!registrationId) return null;
 
     await ownerClient
-      .delete("/fcm-tokens/unregister", { data: { fcm_token: token } })
+      .delete("/fcm-tokens/unregister", { data: { fcm_token: registrationId } })
       .catch((error) => {
         console.error("Gagal menghapus FCM token di server saat logout:", error);
       });
@@ -37,9 +118,13 @@ export async function unregisterCurrentDeviceFcmToken() {
     // Hapus juga token di sisi client supaya login berikutnya (device/user
     // apapun) mendapat token FCM yang baru, bukan token lama yang sudah
     // dihapus dari server.
-    await deleteToken(messaging).catch(() => {});
+    await unregisterMessagingClient(messaging).catch((error) => {
+      console.error("Gagal unregister FCM di client saat logout:", error);
+    });
 
-    return token;
+    writeStoredRegistrationId(null);
+
+    return registrationId;
   } catch (error) {
     console.error("Gagal unregister FCM token saat logout:", error);
     return null;
@@ -79,14 +164,12 @@ export default function useFcmNotification({ enabled = true } = {}) {
         return null;
       }
 
-      const token = await getToken(messaging, {
-        vapidKey: VAPID_KEY,
-        serviceWorkerRegistration: swRegistration,
-      });
+      const token = await registerMessagingClient(messaging, swRegistration);
 
       if (!token) return null;
 
       setFcmToken(token);
+      writeStoredRegistrationId(token);
 
       await ownerClient.post("/fcm-tokens/register", {
         fcm_token: token,
@@ -108,9 +191,15 @@ export default function useFcmNotification({ enabled = true } = {}) {
       await ownerClient.delete("/fcm-tokens/unregister", {
         data: { fcm_token: fcmToken },
       });
+
+      const messaging = await getFirebaseMessaging();
+      if (messaging) {
+        await unregisterMessagingClient(messaging);
+      }
     } catch (error) {
       console.error("Gagal menghapus FCM token:", error);
     } finally {
+      writeStoredRegistrationId(null);
       setFcmToken(null);
     }
   }, [fcmToken]);
@@ -137,7 +226,7 @@ export default function useFcmNotification({ enabled = true } = {}) {
       const messaging = await getFirebaseMessaging();
       if (!messaging) return;
 
-      unsubscribe = onMessage(messaging, (payload) => {
+      unsubscribe = firebaseMessaging.onMessage(messaging, (payload) => {
         const { title, body } = payload.notification || {};
         Swal.fire({
           icon: "info",

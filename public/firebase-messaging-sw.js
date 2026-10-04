@@ -11,12 +11,12 @@ importScripts(
 // Service worker tidak bisa akses import.meta.env, jadi config di-hardcode di sini.
 // Nilai harus SAMA PERSIS dengan .env VITE_FIREBASE_* di atas.
 firebase.initializeApp({
-  apiKey: "AIzaSyD-HKQO9TZcWCSjF4pqmgaDxkWykx9YOdA",
-  authDomain: "pos-grocery-store-web-app.firebaseapp.com",
-  projectId: "pos-grocery-store-web-app",
-  storageBucket: "pos-grocery-store-web-app.firebasestorage.app",
-  messagingSenderId: "21230805158",
-  appId: "1:21230805158:web:330594d39a93750a9dd467",
+  apiKey: import.meta.env.FIREBASE_API_KEY,
+  authDomain: import.meta.env.FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.FIREBASE_APP_ID,
 });
 
 const messaging = firebase.messaging();
