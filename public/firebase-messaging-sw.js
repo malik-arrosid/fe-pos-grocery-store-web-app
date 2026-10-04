@@ -21,14 +21,27 @@ const resolveFirebaseConfig = () => {
 };
 
 const firebaseConfig = resolveFirebaseConfig();
-const hasFirebaseConfig = Object.values(firebaseConfig).every(Boolean);
+const requiredFirebaseWebConfigKeys = [
+  "apiKey",
+  "projectId",
+  "messagingSenderId",
+  "appId",
+];
+const missingFirebaseConfigKeys = requiredFirebaseWebConfigKeys.filter(
+  (key) => !firebaseConfig[key],
+);
+const hasFirebaseConfig = missingFirebaseConfigKeys.length === 0;
+const sanitizedFirebaseConfig = Object.fromEntries(
+  Object.entries(firebaseConfig).filter(([, value]) => value),
+);
 
 if (!hasFirebaseConfig) {
   console.error(
-    "Konfigurasi Firebase pada service worker tidak lengkap. FCM web push dinonaktifkan.",
+    "Konfigurasi Firebase pada service worker tidak lengkap. FCM web push dinonaktifkan. Missing keys:",
+    missingFirebaseConfigKeys,
   );
 } else {
-  firebase.initializeApp(firebaseConfig);
+  firebase.initializeApp(sanitizedFirebaseConfig);
 
   const messaging = firebase.messaging();
 

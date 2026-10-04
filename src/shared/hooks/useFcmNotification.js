@@ -5,6 +5,7 @@ import {
   firebaseConfig,
   getFirebaseMessaging,
   hasFirebaseWebConfig,
+  missingFirebaseWebConfigKeys,
 } from "../../lib/firebase/firebaseConfig.js";
 import ownerClient from "../../lib/http/ownerClient.js";
 
@@ -173,7 +174,10 @@ export default function useFcmNotification({ enabled = true } = {}) {
     }
     if (!("serviceWorker" in navigator)) return null;
     if (!hasFirebaseWebConfig) {
-      console.warn("Konfigurasi Firebase web belum lengkap. Token FCM tidak dibuat.");
+      console.warn(
+        "Konfigurasi Firebase web belum lengkap. Token FCM tidak dibuat. Missing keys:",
+        missingFirebaseWebConfigKeys,
+      );
       return null;
     }
     if (!VAPID_KEY) {
