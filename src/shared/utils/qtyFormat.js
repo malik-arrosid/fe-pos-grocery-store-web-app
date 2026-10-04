@@ -9,13 +9,6 @@ export const parseGramInteger = (v) => {
   return Number.isFinite(n) ? n : 0;
 };
 
-// export const formatKg = (kg) => {
-//   const num = Number(kg);
-//   if (!isFinite(num)) return "-";
-//   const rounded = Math.round((num + Number.EPSILON) * 1000) / 1000;
-//   return String(rounded).replace(/\.?0+$/, "");
-// };
-
 export const formatQty = (value, unit) => {
   const qty = parseGramInteger(value);
   const satuan = String(unit ?? "")

@@ -7,6 +7,7 @@ import {
   markOwnerNotificationAsRead,
 } from "../../shared/services/notificationService.js";
 import { formatToRupiah } from "../../shared/utils/numberFormat.js";
+import { formatQty } from "../../shared/utils/qtyFormat.js";
 
 const formatDetailDateTime = (dateValue) => {
   if (!dateValue) return "-";
@@ -24,7 +25,7 @@ const formatDetailDateTime = (dateValue) => {
       second: "2-digit",
       hour12: false,
     })
-    .replace(/\./g, ":");
+    .replace(/\./g, ":"); 
 };
 
 const formatDetailDate = (dateValue) => {
@@ -43,7 +44,9 @@ const formatDetailDate = (dateValue) => {
 const parseFilenameFromDisposition = (dispositionHeader) => {
   if (!dispositionHeader) return null;
 
-  const utf8FilenameMatch = dispositionHeader.match(/filename\*=UTF-8''([^;]+)/i);
+  const utf8FilenameMatch = dispositionHeader.match(
+    /filename\*=UTF-8''([^;]+)/i,
+  );
   if (utf8FilenameMatch?.[1]) {
     return decodeURIComponent(utf8FilenameMatch[1]);
   }
@@ -84,10 +87,15 @@ export default function DetailNotifikasi() {
         let normalizedNotification = selectedNotification;
         if (!selectedNotification.is_read) {
           try {
-            await markOwnerNotificationAsRead(selectedNotification.id_notification);
+            await markOwnerNotificationAsRead(
+              selectedNotification.id_notification,
+            );
             normalizedNotification = { ...selectedNotification, is_read: true };
           } catch (markReadError) {
-            console.error("Gagal menandai notifikasi owner dibaca:", markReadError);
+            console.error(
+              "Gagal menandai notifikasi owner dibaca:",
+              markReadError,
+            );
           }
         }
 
@@ -241,7 +249,9 @@ export default function DetailNotifikasi() {
                         : "Unduh Laporan Harian (PDF)"}
                     </button>
                     {downloadError && (
-                      <p className="text-sm text-red-600 mt-2">{downloadError}</p>
+                      <p className="text-sm text-red-600 mt-2">
+                        {downloadError}
+                      </p>
                     )}
                   </div>
                 )}
@@ -255,40 +265,44 @@ export default function DetailNotifikasi() {
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="bg-violet-50 rounded-md p-3">
-                          <p className="text-xs text-gray-600">Tanggal Laporan</p>
+                          <p className="text-xs text-gray-600">
+                            Tanggal Laporan
+                          </p>
                           <p className="text-sm font-semibold text-gray-900 mt-1">
                             {formatDetailDate(reportDetail.report_date)}
-                          </p>
-                        </div>
-                        <div className="bg-violet-50 rounded-md p-3">
-                          <p className="text-xs text-gray-600">Dibuat Pada</p>
-                          <p className="text-sm font-semibold text-gray-900 mt-1">
-                            {formatDetailDateTime(reportDetail.generated_at)}
                           </p>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="bg-gray-50 rounded-md p-3">
-                          <p className="text-xs text-gray-600">Total Penjualan</p>
+                          <p className="text-xs text-gray-600">
+                            Total Penjualan
+                          </p>
                           <p className="text-base font-semibold text-gray-900 mt-1">
                             {formatToRupiah(reportSummary?.total_sales || 0)}
                           </p>
                         </div>
                         <div className="bg-gray-50 rounded-md p-3">
-                          <p className="text-xs text-gray-600">Total Transaksi</p>
+                          <p className="text-xs text-gray-600">
+                            Total Transaksi
+                          </p>
                           <p className="text-base font-semibold text-gray-900 mt-1">
                             {reportSummary?.total_transactions || 0}
                           </p>
                         </div>
                         <div className="bg-gray-50 rounded-md p-3">
-                          <p className="text-xs text-gray-600">Transaksi Member</p>
+                          <p className="text-xs text-gray-600">
+                            Transaksi Member
+                          </p>
                           <p className="text-base font-semibold text-gray-900 mt-1">
                             {reportSummary?.total_member_transactions || 0}
                           </p>
                         </div>
                         <div className="bg-gray-50 rounded-md p-3">
-                          <p className="text-xs text-gray-600">Transaksi Guest</p>
+                          <p className="text-xs text-gray-600">
+                            Transaksi Guest
+                          </p>
                           <p className="text-base font-semibold text-gray-900 mt-1">
                             {reportSummary?.total_guest_transactions || 0}
                           </p>
@@ -315,7 +329,9 @@ export default function DetailNotifikasi() {
                             </p>
                             <p>
                               <span className="font-semibold">Total:</span>{" "}
-                              {formatToRupiah(highestTransaction.total_harga || 0)}
+                              {formatToRupiah(
+                                highestTransaction.total_harga || 0,
+                              )}
                             </p>
                           </div>
                         ) : (
@@ -334,10 +350,16 @@ export default function DetailNotifikasi() {
                             <table className="min-w-full text-sm">
                               <thead className="bg-gray-100 text-gray-700">
                                 <tr>
-                                  <th className="px-3 py-2 text-left">Barang</th>
+                                  <th className="px-3 py-2 text-left">
+                                    Barang
+                                  </th>
                                   <th className="px-3 py-2 text-left">Qty</th>
-                                  <th className="px-3 py-2 text-left">Subtotal</th>
-                                  <th className="px-3 py-2 text-left">Transaksi</th>
+                                  <th className="px-3 py-2 text-left">
+                                    Subtotal
+                                  </th>
+                                  <th className="px-3 py-2 text-left">
+                                    Transaksi
+                                  </th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -346,8 +368,15 @@ export default function DetailNotifikasi() {
                                     key={item.id_detail_transaksi}
                                     className="border-t border-gray-200"
                                   >
-                                    <td className="px-3 py-2">{item.item_name}</td>
-                                    <td className="px-3 py-2">{item.quantity}</td>
+                                    <td className="px-3 py-2">
+                                      {item.item_name}
+                                    </td>
+                                    <td className="px-3 py-2">
+                                      {formatQty(
+                                        item.quantity,
+                                        item.satuan_dasar,
+                                      )}
+                                    </td>
                                     <td className="px-3 py-2">
                                       {formatToRupiah(item.subtotal || 0)}
                                     </td>
