@@ -48,9 +48,13 @@ if (!hasFirebaseConfig) {
   messaging.onBackgroundMessage((payload) => {
     const { title, body } = payload.notification || {};
     const data = payload.data || {};
+    const resolvedTitle =
+      title || data.notification_title || "PA App Toko Kelontong";
+    const resolvedBody =
+      body || data.notification_body || "Ada aktivitas baru pada sistem.";
 
-    self.registration.showNotification(title || "PA App Toko Kelontong", {
-      body: body || "Ada aktivitas baru pada sistem.",
+    self.registration.showNotification(resolvedTitle, {
+      body: resolvedBody,
       icon: "/icon-store.svg",
       badge: "/icon-store.svg",
       data,

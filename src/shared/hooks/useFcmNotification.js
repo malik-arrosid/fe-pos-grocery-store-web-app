@@ -266,10 +266,13 @@ export default function useFcmNotification({ enabled = true } = {}) {
 
       unsubscribe = firebaseMessaging.onMessage(messaging, (payload) => {
         const { title, body } = payload.notification || {};
+        const data = payload.data || {};
+        const resolvedTitle = title || data.notification_title || "Notifikasi Baru";
+        const resolvedBody = body || data.notification_body || "";
         Swal.fire({
           icon: "info",
-          title: title || "Notifikasi Baru",
-          text: body || "",
+          title: resolvedTitle,
+          text: resolvedBody,
           toast: true,
           position: "top-end",
           showConfirmButton: false,
