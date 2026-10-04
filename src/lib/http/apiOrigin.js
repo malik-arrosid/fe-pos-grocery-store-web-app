@@ -1,4 +1,4 @@
-const rawApiOrigin = (import.meta.env.API_ORIGIN || "").trim();
+const rawApiOrigin = (import.meta.env.VITE_API_ORIGIN || "").trim();
 
 const API_ORIGIN = rawApiOrigin.replace(/\/+$/, "");
 

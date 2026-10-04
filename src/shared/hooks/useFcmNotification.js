@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 import { getFirebaseMessaging } from "../../lib/firebase/firebaseConfig.js";
 import ownerClient from "../../lib/http/ownerClient.js";
 
-const VAPID_KEY = import.meta.env.FIREBASE_VAPID_KEY;
+const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 const FCM_REGISTRATION_ID_STORAGE_KEY = "owner_fcm_registration_id";
 
 const readStoredRegistrationId = () => {

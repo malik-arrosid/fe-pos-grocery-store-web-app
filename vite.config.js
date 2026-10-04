@@ -11,8 +11,6 @@ export default defineConfig(({ mode }) => {
   ).trim();
 
   return {
-    // Expose API_ORIGIN and FIREBASE_* to import.meta.env (besides VITE_*)
-    envPrefix: ["VITE_", "API_ORIGIN", "FIREBASE_"],
     plugins: [
       react(),
       tailwindcss(),
