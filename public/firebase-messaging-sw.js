@@ -8,31 +8,43 @@ importScripts(
   "https://www.gstatic.com/firebasejs/10.13.0/firebase-messaging-compat.js",
 );
 
-// Service worker tidak bisa akses import.meta.env, jadi config di-hardcode di sini.
-// Nilai harus SAMA PERSIS dengan .env VITE_FIREBASE_* di atas.
-firebase.initializeApp({
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-});
+const resolveFirebaseConfig = () => {
+  const params = new URL(self.location.href).searchParams;
+  return {
+    apiKey: (params.get("apiKey") || "").trim(),
+    authDomain: (params.get("authDomain") || "").trim(),
+    projectId: (params.get("projectId") || "").trim(),
+    storageBucket: (params.get("storageBucket") || "").trim(),
+    messagingSenderId: (params.get("messagingSenderId") || "").trim(),
+    appId: (params.get("appId") || "").trim(),
+  };
+};
 
-const messaging = firebase.messaging();
+const firebaseConfig = resolveFirebaseConfig();
+const hasFirebaseConfig = Object.values(firebaseConfig).every(Boolean);
 
-messaging.onBackgroundMessage((payload) => {
-  const { title, body } = payload.notification || {};
-  const data = payload.data || {};
+if (!hasFirebaseConfig) {
+  console.error(
+    "Konfigurasi Firebase pada service worker tidak lengkap. FCM web push dinonaktifkan.",
+  );
+} else {
+  firebase.initializeApp(firebaseConfig);
 
-  self.registration.showNotification(title || "PA App Toko Kelontong", {
-    body: body || "Ada aktivitas baru pada sistem.",
-    icon: "/icon-store.svg",
-    badge: "/icon-store.svg",
-    data,
-    requireInteraction: false,
+  const messaging = firebase.messaging();
+
+  messaging.onBackgroundMessage((payload) => {
+    const { title, body } = payload.notification || {};
+    const data = payload.data || {};
+
+    self.registration.showNotification(title || "PA App Toko Kelontong", {
+      body: body || "Ada aktivitas baru pada sistem.",
+      icon: "/icon-store.svg",
+      badge: "/icon-store.svg",
+      data,
+      requireInteraction: false,
+    });
   });
-});
+}
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();

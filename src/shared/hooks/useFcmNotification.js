@@ -1,11 +1,39 @@
 import { useEffect, useState, useCallback } from "react";
 import * as firebaseMessaging from "firebase/messaging";
 import Swal from "sweetalert2";
-import { getFirebaseMessaging } from "../../lib/firebase/firebaseConfig.js";
+import {
+  firebaseConfig,
+  getFirebaseMessaging,
+  hasFirebaseWebConfig,
+} from "../../lib/firebase/firebaseConfig.js";
 import ownerClient from "../../lib/http/ownerClient.js";
 
-const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+const VAPID_KEY = (
+  import.meta.env.VITE_FIREBASE_VAPID_KEY ||
+  import.meta.env.FIREBASE_VAPID_KEY ||
+  ""
+).trim();
 const FCM_REGISTRATION_ID_STORAGE_KEY = "owner_fcm_registration_id";
+const FCM_SERVICE_WORKER_PATH = "/firebase-messaging-sw.js";
+const FCM_SERVICE_WORKER_SCOPE = "/firebase-cloud-messaging-push-scope";
+
+const buildFirebaseServiceWorkerUrl = () => {
+  const params = new URLSearchParams();
+  Object.entries(firebaseConfig).forEach(([key, value]) => {
+    if (value) params.set(key, value);
+  });
+
+  const query = params.toString();
+  return query ? `${FCM_SERVICE_WORKER_PATH}?${query}` : FCM_SERVICE_WORKER_PATH;
+};
+
+const registerFirebaseServiceWorker = () =>
+  navigator.serviceWorker.register(buildFirebaseServiceWorkerUrl(), {
+    scope: FCM_SERVICE_WORKER_SCOPE,
+  });
+
+const getFirebaseServiceWorkerRegistration = () =>
+  navigator.serviceWorker.getRegistration(FCM_SERVICE_WORKER_SCOPE);
 
 const readStoredRegistrationId = () => {
   if (typeof window === "undefined") return null;
@@ -93,15 +121,14 @@ const unregisterMessagingClient = async (messaging) => {
 // menerima notifikasi heads-up meski sebelumnya pernah mengizinkan notifikasi.
 export async function unregisterCurrentDeviceFcmToken() {
   if (typeof window === "undefined" || !("Notification" in window)) return null;
+  if (!("serviceWorker" in navigator)) return null;
   if (Notification.permission !== "granted") return null;
 
   try {
     const messaging = await getFirebaseMessaging();
     if (!messaging) return null;
 
-    const swRegistration = await navigator.serviceWorker.getRegistration(
-      "/firebase-messaging-sw.js",
-    );
+    const swRegistration = await getFirebaseServiceWorkerRegistration();
     if (!swRegistration) return null;
 
     const registrationId =
@@ -144,12 +171,19 @@ export default function useFcmNotification({ enabled = true } = {}) {
     if (typeof window === "undefined" || !("Notification" in window)) {
       return null;
     }
+    if (!("serviceWorker" in navigator)) return null;
+    if (!hasFirebaseWebConfig) {
+      console.warn("Konfigurasi Firebase web belum lengkap. Token FCM tidak dibuat.");
+      return null;
+    }
+    if (!VAPID_KEY) {
+      console.warn("VAPID key Firebase belum diisi. Token FCM tidak dibuat.");
+      return null;
+    }
 
     setIsRegistering(true);
     try {
-      const swRegistration = await navigator.serviceWorker.register(
-        "/firebase-messaging-sw.js",
-      );
+      const swRegistration = await registerFirebaseServiceWorker();
 
       const permissionResult = await Notification.requestPermission();
       setPermission(permissionResult);
