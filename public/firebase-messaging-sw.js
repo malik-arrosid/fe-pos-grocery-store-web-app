@@ -48,10 +48,16 @@ if (!hasFirebaseConfig) {
   messaging.onBackgroundMessage((payload) => {
     const { title, body } = payload.notification || {};
     const data = payload.data || {};
-    const resolvedTitle =
-      title || data.notification_title || "PA App Toko Kelontong";
-    const resolvedBody =
-      body || data.notification_body || "Ada aktivitas baru pada sistem.";
+    const resolvedTitle = data.notification_title || title;
+    const resolvedBody = data.notification_body || body;
+
+    if (!resolvedTitle || !resolvedBody) {
+      console.error( 
+        "Notifikasi background FCM diabaikan karena title/body tidak tersedia pada payload notifications.",
+        payload,
+      );
+      return;
+    }
 
     self.registration.showNotification(resolvedTitle, {
       body: resolvedBody,
