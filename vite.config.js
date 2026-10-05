@@ -28,7 +28,7 @@ export default defineConfig(({ mode }) => {
           display: "standalone",
           display_override: ["standalone", "minimal-ui"],
           orientation: "any",
-          start_url: "/",
+          start_url: "/owner/dashboard",
           scope: "/",
           prefer_related_applications: false,
           icons: [
