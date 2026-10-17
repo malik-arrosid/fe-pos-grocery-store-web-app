@@ -473,6 +473,14 @@ export const TransaksiFormPage = () => {
                       <button
                         key={p.id}
                         onClick={() => {
+                          if (Number(p.stock ?? p.stok_dasar ?? 0) <= 0) {
+                            Swal.fire(
+                              "Peringatan",
+                              "Tidak bisa pilih barang ini, karna stok barang kosong",
+                              "warning",
+                            );
+                            return;
+                          }
                           setSelectedProductId(p.id);
                           setProductSearch(p.name);
                         }}
@@ -496,7 +504,19 @@ export const TransaksiFormPage = () => {
                 <select
                   className="w-full px-3 py-2 border rounded-lg text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-400"
                   value={selectedProductId}
-                  onChange={(e) => setSelectedProductId(e.target.value)}
+                  onChange={(e) => {
+                    const p = allProducts.find((x) => x.id === e.target.value);
+                    if (p && Number(p.stock ?? p.stok_dasar ?? 0) <= 0) {
+                      setSelectedProductId("");
+                      Swal.fire(
+                        "Peringatan",
+                        "Tidak bisa pilih barang ini, karna stok barang kosong",
+                        "warning",
+                      );
+                      return;
+                    }
+                    setSelectedProductId(e.target.value);
+                  }}
                 >
                   <option value="">-- Pilih barang --</option>
                   {allProducts.map((p) => (
