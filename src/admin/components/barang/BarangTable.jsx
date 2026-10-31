@@ -1,5 +1,9 @@
 import { formatToRupiah } from "../../../shared/utils/numberFormat";
 import { formatQty } from "../../../shared/utils/qtyFormat";
+import {
+  isLowStock,
+  getLowStockThreshold,
+} from "../../../shared/utils/lowStockHelper";
 
 export default function BarangTable({
   barang,
@@ -35,7 +39,7 @@ export default function BarangTable({
               "No",
               "Nama Barang",
               "Stok",
-              "Minimum Stok",
+              "Status Stok",
               "Harga Jual",
               "Harga Beli",
               "Tindakan",
@@ -52,7 +56,7 @@ export default function BarangTable({
         <tbody>
           {barang.length === 0 ? (
             <tr>
-              <td colSpan="8" className="px-6 py-4 text-center">
+              <td colSpan="7" className="px-6 py-4 text-center">
                 <div className="flex flex-col items-center justify-center py-8">
                   <svg
                     className="w-16 h-16 text-gray-400"
@@ -75,10 +79,12 @@ export default function BarangTable({
             </tr>
           ) : (
             barang.map((item, index) => {
-              const stok = Number(item.stok_dasar ?? 0);
-              const minimumStok = Number(item.minimum_stok ?? 0);
-              const stokRendah = minimumStok > 0 && stok <= minimumStok;
-              
+              const low = isLowStock(item);
+              const threshold = getLowStockThreshold(
+                item.nama_barang,
+                item.satuan_dasar,
+              );
+
               return (
                 <tr key={item.id_barang} className="border text-center">
                   <td className="px-6 py-4 whitespace-nowrap text-sm border">
@@ -87,19 +93,22 @@ export default function BarangTable({
                   <td className="px-6 py-4 whitespace-nowrap text-sm border font-medium">
                     {item.nama_barang}
                   </td>
-                  <td
-                    className={`px-6 py-4 whitespace-nowrap text-sm border ${
-                      stokRendah ? "bg-red-100 text-red-700 font-semibold" : ""
-                    }`}
-                    title={stokRendah ? "Barang perlu di re-stok!" : undefined}
-                  >
+                  <td className="px-6 py-4 whitespace-nowrap text-sm border">
                     {formatQty(item.stok_dasar, item.satuan_dasar)}
-                    {stokRendah && (
-                      <span className="ml-2 text-xs text-red-600">⚠</span>
-                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm border">
-                    {formatQty(item.minimum_stok, item.satuan_dasar)}
+                    {low ? (
+                      <span
+                        className="inline-flex items-center gap-1 bg-red-100 text-red-700 text-xs font-semibold px-2 py-1 rounded-full"
+                        title={`Batas low stock: ${formatQty(threshold, item.satuan_dasar)}`}
+                      >
+                        Low Stock
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full">
+                        Aman
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm border">
                     {formatToRupiah(item.harga_jual_per_sd)}

@@ -5,6 +5,10 @@ import { useBarang } from "../../shared/hooks/useBarang.js";
 import { formatToRupiah } from "../../shared/utils/numberFormat.js";
 import { formatQty } from "../../shared/utils/qtyFormat.js";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  isLowStock,
+  getLowStockThreshold,
+} from "../../shared/utils/lowStockHelper.js";
 
 const LIMIT = 10;
 
@@ -137,7 +141,7 @@ export default function DaftarBarang() {
                     Stok
                   </th>
                   <th className="px-4 sm:px-6 py-3 text-left font-bold">
-                    Minimum Stok
+                    Status Stok
                   </th>
                   <th className="px-4 sm:px-6 py-3 text-left font-bold">
                     Harga Beli
@@ -159,9 +163,11 @@ export default function DaftarBarang() {
                   </tr>
                 ) : (
                   barang.map((item, index) => {
-                    const stok = Number(item.stok_dasar ?? 0);
-                    const minimumStok = Number(item.minimum_stok ?? 0);
-                    const stokRendah = minimumStok > 0 && stok <= minimumStok;
+                    const low = isLowStock(item);
+                    const threshold = getLowStockThreshold(
+                      item.nama_barang,
+                      item.satuan_dasar,
+                    );
                     
                     return (
                       <tr key={item.id_barang} className="hover:bg-gray-50">
@@ -171,23 +177,22 @@ export default function DaftarBarang() {
                         <td className="px-4 sm:px-6 py-3 sm:py-4 text-gray-900 font-semibold">
                           {item.nama_barang}
                         </td>
-                        <td
-                          className={`px-4 sm:px-6 py-3 sm:py-4 text-gray-900 font-semibold ${
-                            stokRendah
-                              ? "bg-red-100 text-red-700 font-semibold"
-                              : ""
-                          }`}
-                          title={
-                            stokRendah ? "Barang perlu di re-stok!" : undefined
-                          }
-                        >
+                        <td className="px-4 py-3 sm:px-6 sm:py-4">
                           {formatQty(item.stok_dasar, item.satuan_dasar)}
-                          {stokRendah && (
-                            <span className="ml-2 text-xs text-red-600">⚠</span>
-                          )}
                         </td>
-                        <td className="px-4 sm:px-6 py-3 sm:py-4 text-gray-900 font-semibold">
-                          {formatQty(item.minimum_stok, item.satuan_dasar)}
+                        <td className="px-4 py-3 sm:px-6 sm:py-4">
+                          {low ? (
+                            <span
+                              className="inline-flex items-center gap-1 bg-red-100 text-red-700 text-xs font-semibold px-2 py-1 rounded-full"
+                              title={`Batas low stock: ${formatQty(threshold, item.satuan_dasar)}`}
+                            >
+                              Low Stock
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full">
+                              Aman
+                            </span>
+                          )}
                         </td>
                         <td className="px-4 sm:px-6 py-3 sm:py-4 text-gray-700">
                           {formatToRupiah(parseFloat(item.harga_modal_per_sd))}
