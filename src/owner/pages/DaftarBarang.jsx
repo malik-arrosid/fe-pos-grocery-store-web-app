@@ -188,18 +188,18 @@ export default function DaftarBarang() {
                               className="inline-flex items-center gap-1 bg-red-700 text-white text-xs font-semibold px-2 py-1 rounded-full"
                               title="Stok habis (0)"
                             >
-                              Habis
+                              Stok Habis
                             </span>
                           ) : low ? (
                             <span
                               className="inline-flex items-center gap-1 bg-red-100 text-red-700 text-xs font-semibold px-2 py-1 rounded-full"
                               title={`Batas low stock: ${formatQty(threshold, item.satuan_dasar)}`}
                             >
-                              Low Stock
+                              Stok Menipis
                             </span>
                           ) : (
                             <span className="inline-flex items-center bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full">
-                              Aman
+                              Stok Aman
                             </span>
                           )}
                         </td>
