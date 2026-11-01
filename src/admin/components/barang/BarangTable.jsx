@@ -2,6 +2,7 @@ import { formatToRupiah } from "../../../shared/utils/numberFormat";
 import { formatQty } from "../../../shared/utils/qtyFormat";
 import {
   isLowStock,
+  isOutOfStock,
   getLowStockThreshold,
 } from "../../../shared/utils/lowStockHelper";
 
@@ -80,6 +81,7 @@ export default function BarangTable({
           ) : (
             barang.map((item, index) => {
               const low = isLowStock(item);
+              const out = isOutOfStock(item);
               const threshold = getLowStockThreshold(
                 item.nama_barang,
                 item.satuan_dasar,
@@ -97,7 +99,14 @@ export default function BarangTable({
                     {formatQty(item.stok_dasar, item.satuan_dasar)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm border">
-                    {low ? (
+                    {out ? (
+                      <span
+                        className="inline-flex items-center gap-1 bg-red-700 text-white text-xs font-semibold px-2 py-1 rounded-full"
+                        title="Stok habis (0)"
+                      >
+                        Habis
+                      </span>
+                    ) : low ? (
                       <span
                         className="inline-flex items-center gap-1 bg-red-100 text-red-700 text-xs font-semibold px-2 py-1 rounded-full"
                         title={`Batas low stock: ${formatQty(threshold, item.satuan_dasar)}`}
