@@ -223,7 +223,7 @@ export const HistoriTransaksiPage = () => {
                   </div>
                   <div className="flex justify-between items-center text-sm mb-3">
                     <span className="text-gray-500">
-                      {transaction.jumlah_item || 0} item
+                      {transaction.jumlah_item || 0} Barang
                     </span>
                     <span className="font-bold text-green-700">
                       {formatToRupiah(parseFloat(transaction.total_harga))}
@@ -241,10 +241,10 @@ export const HistoriTransaksiPage = () => {
           <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full bg-white rounded-lg overflow-hidden">
               <thead className="bg-green-700 text-white">
-                <tr>
+                <tr className="text-center">
                   <th className="py-3 px-4 text-left">Kode Transaksi</th>
                   <th className="py-3 px-4 text-left">Tanggal</th>
-                  <th className="py-3 px-4 text-left">Qty Barang</th>
+                  <th className="py-3 px-4 text-left">Jumlah Barang</th>
                   <th className="py-3 px-4 text-left">Total Harga</th>
                   <th className="py-3 px-4 text-left">Tipe Pelanggan</th>
                   <th className="py-3 px-4 text-left">
@@ -277,7 +277,7 @@ export const HistoriTransaksiPage = () => {
                     <td className="py-3 px-4 text-sm">
                       {formatDate(transaction.created_at)}
                     </td>
-                    <td className="py-3 px-4 text-sm">
+                    <td className="py-3 xl:ps-18 md:ps-10 text-sm">
                       {transaction.jumlah_item || "0"}
                     </td>
                     <td className="py-3 px-4 text-sm">

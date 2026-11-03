@@ -161,7 +161,7 @@ export default function HistoriTransaksi() {
                     Tanggal
                   </th>
                   <th className="px-4 sm:px-6 py-3 text-left font-bold">
-                    Jumlah Item
+                    Jumlah Barang
                   </th>
                   <th className="px-4 sm:px-6 py-3 text-left font-bold">
                     Total
@@ -201,7 +201,7 @@ export default function HistoriTransaksi() {
                       <td className="px-4 sm:px-6 py-3 sm:py-4 text-gray-700">
                         {formatDate(transaction.created_at)}
                       </td>
-                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-gray-700">
+                      <td className="px-4 xl:ps-18 md:ps-10 sm:px-6 py-3 sm:py-4 text-gray-700">
                         {transaction.jumlah_item || "0"}
                       </td>
                       <td className="px-4 sm:px-6 py-3 sm:py-4 text-gray-700">
@@ -283,7 +283,7 @@ export default function HistoriTransaksi() {
                   </div>
                   <div className="flex justify-between items-center text-sm mb-3">
                     <span className="text-gray-500">
-                      {transaction.jumlah_item || 0} item
+                      {transaction.jumlah_item || 0} Barang
                     </span>
                     <span className="font-bold text-violet-700">
                       {formatToRupiah(parseFloat(transaction.total_harga))}
