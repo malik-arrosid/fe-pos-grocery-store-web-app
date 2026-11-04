@@ -4,20 +4,23 @@ import { formatToRupiah } from "../../../shared/utils/numberFormat.js";
 import { formatQty } from "../../../shared/utils/qtyFormat.js";
 import { ChevronLeft, ChevronRight, TrendingUp, Search, X } from "lucide-react";
 
-const formatDateInput = (d) => {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+const dateFormatter = new Intl.DateTimeFormat("id-ID", {
+  timeZone: "Asia/Jakarta",
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+});
+
+const formatTanggal = (value) => {
+  if (!value) return "-";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "-";
+  return dateFormatter.format(d).replace(/\//g, "-");
 };
 
 export default function LaporanHistoriHargaJual() {
   const { data, meta, loading, error, fetchData } = useBarangSalesByPrice();
 
-  const today = new Date();
-  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-  const [startDate, setStartDate] = useState(formatDateInput(firstDay));
-  const [endDate, setEndDate] = useState(formatDateInput(today));
   const [page, setPage] = useState(1);
   const LIMIT = 10;
 
@@ -25,17 +28,9 @@ export default function LaporanHistoriHargaJual() {
   const [keyword, setKeyword] = useState("");
 
   useEffect(() => {
-    if (!startDate || !endDate) return;
-    fetchData({ page, limit: LIMIT, startDate, endDate });
-  }, [page, startDate, endDate, fetchData]);
+    fetchData({ page, limit: LIMIT, keyword });
+  }, [page, keyword, fetchData]);
 
-
-  // Fetch ulang saat page/date/keyword berubah
-  useEffect(() => {
-    if (!startDate || !endDate) return;
-    fetchData({ page, limit: LIMIT, startDate, endDate, keyword });
-  }, [page, startDate, endDate, keyword, fetchData]);
-  
   // Group by barang untuk tampilan yang lebih rapi
   const grouped = useMemo(() => {
     const map = new Map();
@@ -55,16 +50,6 @@ export default function LaporanHistoriHargaJual() {
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= (meta.total_page || 1)) setPage(newPage);
-  };
-
-  const handleDateChange = (which, value) => {
-    if (which === "start") {
-      setStartDate(value);
-      setPage(1);
-    } else {
-      setEndDate(value);
-      setPage(1);
-    }
   };
 
   const handleSearch = useCallback(
@@ -122,35 +107,7 @@ export default function LaporanHistoriHargaJual() {
         </p>
       </div>
 
-      {/* Filter Tanggal */}
       <div className="bg-white rounded-lg shadow p-3 sm:p-4 mb-4 sm:mb-6">
-        <div className="flex flex-col sm:flex-row gap-3 sm:items-end pb-3">
-          <div className="flex flex-col flex-1">
-            <label className="text-xs sm:text-sm font-medium text-gray-700 mb-1">
-              Dari Tanggal
-            </label>
-            <input
-              type="date"
-              value={startDate}
-              max={endDate}
-              onChange={(e) => handleDateChange("start", e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-            />
-          </div>
-          <div className="flex flex-col flex-1">
-            <label className="text-xs sm:text-sm font-medium text-gray-700 mb-1">
-              Sampai Tanggal
-            </label>
-            <input
-              type="date"
-              value={endDate}
-              min={startDate}
-              onChange={(e) => handleDateChange("end", e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-            />
-          </div>
-        </div>
-
         <form onSubmit={handleSearch}>
           <div className="relative">
             <input
@@ -207,15 +164,6 @@ export default function LaporanHistoriHargaJual() {
         <>
           <div className="space-y-4">
             {grouped.map((group) => {
-              {/* const totalQty = group.prices.reduce(
-                (s, p) => s + p.total_quantity,
-                0,
-              );
-              const totalSubtotal = group.prices.reduce(
-                (s, p) => s + p.total_subtotal,
-                0,
-              ); */}
-
               return (
                 <div
                   key={group.id_barang}
@@ -227,18 +175,6 @@ export default function LaporanHistoriHargaJual() {
                         {group.nama_barang}
                       </h3>
                     </div>
-                    {/* <div className="text-sm sm:text-right">
-                      <p>
-                        Stok Terjual:
-                        <strong className="ml-1">
-                          {formatQty(totalQty, group.satuan_dasar)}
-                        </strong>
-                      </p>
-                      <p>
-                        Total Terjual:{" "}
-                        <strong>{formatToRupiah(totalSubtotal)}</strong>
-                      </p>
-                    </div> */}
                   </div>
 
                   <div className="overflow-x-auto">
@@ -249,13 +185,16 @@ export default function LaporanHistoriHargaJual() {
                             Harga Jual / Satuan
                           </th>
                           <th className="px-4 py-2 text-right">
-                            Jumlah Terjual
+                            Stok Terjual
                           </th>
                           <th className="px-4 py-2 text-right">
                             Jumlah Transaksi
                           </th>
                           <th className="px-4 py-2 text-right">
                             Total Subtotal
+                          </th>
+                          <th className="px-4 py-2 text-right">
+                            Terakhir Terjual
                           </th>
                         </tr>
                       </thead>
@@ -278,6 +217,9 @@ export default function LaporanHistoriHargaJual() {
                             </td>
                             <td className="px-4 py-2 text-right font-semibold text-violet-700">
                               {formatToRupiah(p.total_subtotal)}
+                            </td>
+                            <td className="px-4 py-2 text-right text-gray-700">
+                              {formatTanggal(p.tgl_terakhir_transaksi)}
                             </td>
                           </tr>
                         ))}

@@ -14,13 +14,11 @@ export function useBarangSalesByPrice() {
   const [error, setError] = useState(null);
 
   const fetchData = useCallback(
-    async ({ page = 1, limit = 10, startDate, endDate, id_barang, keyword } = {}) => {
+    async ({ page = 1, limit = 10, id_barang, keyword } = {}) => {
       setLoading(true);
       setError(null);
       try {
         const params = { page, limit };
-        if (startDate) params.startDate = startDate;
-        if (endDate) params.endDate = endDate;
         if (id_barang) params.id_barang = id_barang;
         if (keyword && keyword.trim()) params.keyword = keyword.trim();
 
