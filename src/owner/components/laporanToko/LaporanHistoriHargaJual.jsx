@@ -172,6 +172,9 @@ export default function LaporanHistoriHargaJual() {
                       <h3 className="font-bold text-base sm:text-lg">
                         {group.nama_barang}
                       </h3>
+                      <p className="sm:text-lg">
+                        Satuan: {group.satuan_dasar}
+                      </p>
                     </div>
                   </div>
 
