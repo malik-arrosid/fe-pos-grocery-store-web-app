@@ -107,44 +107,42 @@ export default function LaporanHistoriHargaJual() {
         </p>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-3 sm:p-4 mb-4 sm:mb-6">
-        <form onSubmit={handleSearch}>
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Cari nama barang..."
-              className="w-full p-3 pl-10 pr-24 rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-            />
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              size={18}
-            />
-            {searchInput && (
-              <button
-                type="button"
-                onClick={handleClearSearch}
-                className="absolute right-20 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-gray-800 cursor-pointer"
-                aria-label="Bersihkan pencarian"
-              >
-                <X size={18} />
-              </button>
-            )}
+      <form onSubmit={handleSearch} className="mb-4 sm:mb-6">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Cari nama barang..."
+            className="w-full p-3 pl-10 pr-24 rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+          />
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            size={18}
+          />
+          {searchInput && (
             <button
-              type="submit"
-              className="absolute right-1 top-1 bottom-1 px-4 rounded-md bg-violet-700 text-white hover:bg-violet-800 active:bg-violet-900 cursor-pointer text-sm"
+              type="button"
+              onClick={handleClearSearch}
+              className="absolute right-20 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-gray-800 cursor-pointer"
+              aria-label="Bersihkan pencarian"
             >
-              Cari
+              <X size={18} />
             </button>
-          </div>
-          {isSearching && (
-            <p className="text-xs text-gray-500 mt-2">
-              Hasil pencarian untuk: <strong>"{keyword}"</strong>
-            </p>
           )}
-        </form>
-      </div>
+          <button
+            type="submit"
+            className="absolute right-1 top-1 bottom-1 px-4 rounded-md bg-violet-700 text-white hover:bg-violet-800 active:bg-violet-900 cursor-pointer text-sm"
+          >
+            Cari
+          </button>
+        </div>
+        {isSearching && (
+          <p className="text-xs text-gray-500 mt-2">
+            Hasil pencarian untuk: <strong>"{keyword}"</strong>
+          </p>
+        )}
+      </form>
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
