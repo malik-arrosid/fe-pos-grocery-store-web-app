@@ -1,8 +1,8 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useBarangSalesByPrice } from "../../../shared/hooks/useBarangSalesByPrice.js";
 import { formatToRupiah } from "../../../shared/utils/numberFormat.js";
 import { formatQty } from "../../../shared/utils/qtyFormat.js";
-import { ChevronLeft, ChevronRight, TrendingUp } from "lucide-react";
+import { ChevronLeft, ChevronRight, TrendingUp, Search, X } from "lucide-react";
 
 const formatDateInput = (d) => {
   const y = d.getFullYear();
@@ -21,11 +21,21 @@ export default function LaporanHistoriHargaJual() {
   const [page, setPage] = useState(1);
   const LIMIT = 10;
 
+  const [searchInput, setSearchInput] = useState("");
+  const [keyword, setKeyword] = useState("");
+
   useEffect(() => {
     if (!startDate || !endDate) return;
     fetchData({ page, limit: LIMIT, startDate, endDate });
   }, [page, startDate, endDate, fetchData]);
 
+
+  // Fetch ulang saat page/date/keyword berubah
+  useEffect(() => {
+    if (!startDate || !endDate) return;
+    fetchData({ page, limit: LIMIT, startDate, endDate, keyword });
+  }, [page, startDate, endDate, keyword, fetchData]);
+  
   // Group by barang untuk tampilan yang lebih rapi
   const grouped = useMemo(() => {
     const map = new Map();
@@ -57,6 +67,22 @@ export default function LaporanHistoriHargaJual() {
     }
   };
 
+  const handleSearch = useCallback(
+    (e) => {
+      e?.preventDefault?.();
+      const trimmed = searchInput.trim();
+      setKeyword(trimmed);
+      setPage(1);
+    },
+    [searchInput],
+  );
+  
+  const handleClearSearch = () => {
+    setSearchInput("");
+    setKeyword("");
+    setPage(1);
+  };
+  
   const getPageNumbers = () => {
     const total = meta.total_page || 1;
     const current = page;
@@ -81,6 +107,8 @@ export default function LaporanHistoriHargaJual() {
     return pages;
   };
 
+  const isSearching = Boolean(keyword);
+  
   return (
     <div className="p-3 sm:p-6 bg-gray-50 min-h-screen">
       <div className="mb-4 sm:mb-6">
@@ -89,13 +117,14 @@ export default function LaporanHistoriHargaJual() {
           Histori Penjualan per Harga Jual
         </h1>
         <p className="text-sm sm:text-base text-gray-600 mt-2">
-          Rekapitulasi perubahan jumlah terjual atas harga jual barang yang diubah
+          Rekapitulasi perubahan jumlah terjual atas harga jual barang yang
+          diubah
         </p>
       </div>
 
       {/* Filter Tanggal */}
       <div className="bg-white rounded-lg shadow p-3 sm:p-4 mb-4 sm:mb-6">
-        <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
+        <div className="flex flex-col sm:flex-row gap-3 sm:items-end pb-3">
           <div className="flex flex-col flex-1">
             <label className="text-xs sm:text-sm font-medium text-gray-700 mb-1">
               Dari Tanggal
@@ -121,6 +150,43 @@ export default function LaporanHistoriHargaJual() {
             />
           </div>
         </div>
+
+        <form onSubmit={handleSearch}>
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Cari nama barang..."
+              className="w-full p-3 pl-10 pr-24 rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+            />
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              size={18}
+            />
+            {searchInput && (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                className="absolute right-20 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-gray-800 cursor-pointer"
+                aria-label="Bersihkan pencarian"
+              >
+                <X size={18} />
+              </button>
+            )}
+            <button
+              type="submit"
+              className="absolute right-1 top-1 bottom-1 px-4 rounded-md bg-violet-700 text-white hover:bg-violet-800 active:bg-violet-900 cursor-pointer text-sm"
+            >
+              Cari
+            </button>
+          </div>
+          {isSearching && (
+            <p className="text-xs text-gray-500 mt-2">
+              Hasil pencarian untuk: <strong>"{keyword}"</strong>
+            </p>
+          )}
+        </form>
       </div>
 
       {loading ? (
@@ -133,20 +199,22 @@ export default function LaporanHistoriHargaJual() {
         </div>
       ) : grouped.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
-          Tidak ada data penjualan pada rentang tanggal ini.
+          {isSearching
+            ? `Tidak ada barang ditemukan dengan nama "${keyword}".`
+            : "Tidak ada data penjualan pada rentang tanggal ini."}
         </div>
       ) : (
         <>
           <div className="space-y-4">
             {grouped.map((group) => {
-              const totalQty = group.prices.reduce(
+              {/* const totalQty = group.prices.reduce(
                 (s, p) => s + p.total_quantity,
                 0,
               );
               const totalSubtotal = group.prices.reduce(
                 (s, p) => s + p.total_subtotal,
                 0,
-              );
+              ); */}
 
               return (
                 <div
@@ -158,21 +226,19 @@ export default function LaporanHistoriHargaJual() {
                       <h3 className="font-bold text-base sm:text-lg">
                         {group.nama_barang}
                       </h3>
-                      <p className="text-xs sm:text-sm text-violet-200">
-                        Satuan dasar: {group.satuan_dasar || "-"}
-                      </p>
                     </div>
-                    <div className="text-sm sm:text-right">
+                    {/* <div className="text-sm sm:text-right">
                       <p>
-                        Total Terjual:{" "}
-                        <strong>
+                        Stok Terjual:
+                        <strong className="ml-1">
                           {formatQty(totalQty, group.satuan_dasar)}
                         </strong>
                       </p>
                       <p>
-                        Total: <strong>{formatToRupiah(totalSubtotal)}</strong>
+                        Total Terjual:{" "}
+                        <strong>{formatToRupiah(totalSubtotal)}</strong>
                       </p>
-                    </div>
+                    </div> */}
                   </div>
 
                   <div className="overflow-x-auto">
