@@ -25,6 +25,12 @@ export default function LaporanTabs({ activeTab, onChange }) {
         >
           Laporan Tahunan
         </button>
+        <button
+          className={`${tabClass("histori-harga")} cursor-pointer`}
+          onClick={() => onChange("histori-harga")}
+        >
+          Histori Harga Jual
+        </button>
       </div>
     </div>
   );

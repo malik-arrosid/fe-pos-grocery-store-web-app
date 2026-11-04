@@ -3,7 +3,6 @@ import Swal from "sweetalert2";
 import {
   getDashboardStatsAdmin,
   getDashboardStatsOwner,
-  getDateRangeSalesAdmin,
   getDateRangeSalesOwner,
 } from "../services/dashboardService.js";
 
@@ -36,12 +35,7 @@ export function useDashboard({ mode, setDashboardStats, setDateRangeData }) {
   const fetchDateRangeSales = async (startDate, endDate) => {
     setError(null);
     try {
-      let res;
-      if (mode === "admin") {
-        res = await getDateRangeSalesAdmin(startDate, endDate);
-      } else if (mode === "owner") {
-        res = await getDateRangeSalesOwner(startDate, endDate);
-      }
+      let res = await getDateRangeSalesOwner(startDate, endDate);
 
       const data = res.data?.data || [];
 

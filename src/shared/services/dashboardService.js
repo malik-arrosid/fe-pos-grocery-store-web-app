@@ -56,15 +56,6 @@ const getDashboardStatsOwner = async () => {
   };
 };
 
-// Get weekly sales data
-const getDateRangeSalesAdmin = (startDate, endDate) => {
-  const params = new URLSearchParams();
-  if (startDate) params.append("startDate", startDate);
-  if (endDate) params.append("endDate", endDate);
-  const query = params.toString();
-  return adminClient.get(`/transaksi/stats/date-range${query ? `?${query}` : ""}`);
-};
-
 const getDateRangeSalesOwner = (startDate, endDate) => {
   const params = new URLSearchParams();
   if (startDate) params.append("startDate", startDate);
@@ -76,6 +67,5 @@ const getDateRangeSalesOwner = (startDate, endDate) => {
 export {
   getDashboardStatsAdmin,
   getDashboardStatsOwner,
-  getDateRangeSalesAdmin,
   getDateRangeSalesOwner,
 };

@@ -4,6 +4,7 @@ import LaporanTabs from "../components/laporanToko/LaporanTabs.jsx";
 import LaporanMingguan from "../components/laporanToko/LaporanMingguan.jsx";
 import LaporanBulanan from "../components/laporanToko/LaporanBulanan.jsx";
 import LaporanTahunan from "../components/laporanToko/LaporanTahunan.jsx";
+import LaporanHistoriHargaJual from "../components/laporanToko/LaporanHistoriHargaJual.jsx";
 
 export default function LaporanToko() {
   const { setActiveTab } = useUIStore();
@@ -21,6 +22,7 @@ export default function LaporanToko() {
           {activeTab === "mingguan" && <LaporanMingguan />}
           {activeTab === "bulanan" && <LaporanBulanan />}
           {activeTab === "tahunan" && <LaporanTahunan />}
+          {activeTab === "histori-harga" && <LaporanHistoriHargaJual />}
         </div>
       </div>
     </div>
