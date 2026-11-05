@@ -64,8 +64,22 @@ const getDateRangeSalesOwner = (startDate, endDate) => {
   return ownerClient.get(`/transaksi/stats/date-range${query ? `?${query}` : ""}`);
 };
 
+const getOwnerDashboardTodayStats = async () => {
+  const res = await ownerClient.get("/dashboard/stats");
+  return (
+    res.data?.data || {
+      total_transaksi_hari_ini: 0,
+      omset_hari_ini: 0,
+      total_pembelian_barang_hari_ini: 0,
+      jumlah_barang_masuk_hari_ini: 0,
+      keuntungan_bersih_hari_ini: 0,
+    }
+  );
+};
+
 export {
   getDashboardStatsAdmin,
   getDashboardStatsOwner,
   getDateRangeSalesOwner,
+  getOwnerDashboardTodayStats,
 };

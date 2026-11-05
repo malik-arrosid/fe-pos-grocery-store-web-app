@@ -8,9 +8,16 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from "recharts";
+import {
+  ShoppingCart,
+  Wallet,
+  PackagePlus,
+  TrendingUp,
+} from "lucide-react";
 import { useUIStore } from "../../stores/useUIStore.js";
 import { useDashboardStore } from "../../stores/useDashboardStore.js";
 import { useDashboard } from "../../shared/hooks/useDashboard.js";
+import { formatToRupiah } from "../../shared/utils/numberFormat.js";
 
 const getDefaultDates = () => {
   const today = new Date();
@@ -26,12 +33,13 @@ const getDefaultDates = () => {
 
 export default function Dashboard() {
   const { setActiveTab } = useUIStore();
-  const { dashboardStats, dateRangeData, setDashboardStats, setDateRangeData } =
+  const { dashboardStats, todayStats, dateRangeData, setDashboardStats, setDateRangeData, setTodayStats } =
     useDashboardStore();
   const { fetchAllDashboardData, loading } = useDashboard({
     mode: "owner",
     setDashboardStats,
     setDateRangeData,
+    setTodayStats,
   });
 
   const [startDate, setStartDate] = useState("");
@@ -67,6 +75,44 @@ export default function Dashboard() {
     },
   ];
 
+  const untungRugiOmset = Number(todayStats?.untung_rugi_omset || 0);
+  const isRugi = untungRugiOmset < 0;
+  const labelUntungRugi = isRugi ? "Rugi" : "Untung";
+  
+  const todayCards = [
+    {
+      title: "Transaksi Hari Ini",
+      value: todayStats?.total_transaksi_hari_ini || 0,
+      subtitle: "transaksi berhasil",
+      icon: ShoppingCart,
+      bg: "bg-violet-700",
+    },
+    {
+      title: "Omset Hari Ini",
+      value: formatToRupiah(todayStats?.omset_hari_ini || 0),
+      subtitle: "total penjualan",
+      icon: Wallet,
+      bg: "bg-emerald-600",
+    },
+    {
+      title: "Pembelian Barang Hari Ini",
+      value: formatToRupiah(todayStats?.total_pembelian_barang_hari_ini || 0),
+      subtitle: `${todayStats?.jumlah_barang_masuk_hari_ini || 0} barang masuk`,
+      icon: PackagePlus,
+      bg: "bg-amber-600",
+    },
+    {
+      title: "Keuntungan Barang Hari Ini",
+      value: formatToRupiah(todayStats?.keuntungan_bersih_hari_ini || 0),
+      subtitle: `${todayStats?.jumlah_barang_terjual_hari_ini || 0} Barang Terjual`,
+      icon: TrendingUp,
+      bg:
+        (todayStats?.keuntungan_bersih_hari_ini || 0) >= 0
+          ? "bg-blue-700"
+          : "bg-red-600",
+    },
+  ];
+  
   const handleDateChange = (e) => {
     const { name, value } = e.target;
     if (name === "startDate") {
@@ -96,19 +142,105 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Cards — 1 kolom mobile, 3 kolom tablet+ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
-        {cardData.map(({ title, value, color }) => (
-          <div
-            key={title}
-            className={`${color} text-white p-4 sm:p-6 rounded-lg shadow-lg`}
-          >
-            <h3 className="font-semibold text-sm sm:text-lg">{title}</h3>
-            <p className="text-2xl sm:text-4xl font-bold mt-2 sm:mt-4">
-              {value}
+      <div className="mb-6 sm:mb-8">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3">
+          Ringkasan Hari Ini
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+          {/* ===== Card 1: Transaksi Hari Ini ===== */}
+          <div className="bg-violet-700 text-white p-4 sm:p-6 rounded-lg shadow-lg">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-sm sm:text-base">
+                Transaksi Hari Ini
+              </h3>
+              <ShoppingCart size={22} className="opacity-80" />
+            </div>
+            <p className="text-2xl sm:text-3xl font-bold mt-2 sm:mt-3">
+              {todayStats?.total_transaksi_hari_ini || 0}
+            </p>
+            <p className="text-xs sm:text-sm opacity-80 mt-1">
+              transaksi berhasil
             </p>
           </div>
-        ))}
+
+          {/* ===== Card 2: Omset Hari Ini (dengan Untung/Rugi) ===== */}
+          <div
+            className={`${
+              isRugi ? "bg-red-600" : "bg-emerald-600"
+            } text-white p-4 sm:p-6 rounded-lg shadow-lg`}
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-sm sm:text-base">
+                Omset Hari Ini
+              </h3>
+              <Wallet size={22} className="opacity-80" />
+            </div>
+            <p className="text-2xl sm:text-3xl font-bold mt-2 sm:mt-3 break-words">
+              {formatToRupiah(todayStats?.omset_hari_ini || 0)}
+            </p>
+            {/* Baris Untung/Rugi di bawah nilai omset */}
+            <div className="mt-2 pt-2 border-t border-white/30">
+              <p className="text-xs sm:text-sm opacity-90">
+                {labelUntungRugi}:{" "}
+                <span className="font-semibold">
+                  {isRugi ? "-" : ""}
+                  {formatToRupiah(Math.abs(untungRugiOmset))}
+                </span>
+              </p>
+              <p className="text-[10px] sm:text-xs opacity-75 mt-0.5">
+                (omset - pembelian barang)
+              </p>
+            </div>
+          </div>
+
+          {/* ===== Card 3 & 4: Pembelian & Keuntungan Bersih ===== */}
+          {todayCards
+            .filter(
+              (c) =>
+                c.title !== "Transaksi Hari Ini" &&
+                c.title !== "Omset Hari Ini",
+            )
+            .map(({ title, value, subtitle, icon: Icon, bg }) => (
+              <div
+                key={title}
+                className={`${bg} text-white p-4 sm:p-6 rounded-lg shadow-lg`}
+              >
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-sm sm:text-base">
+                    {title}
+                  </h3>
+                  <Icon size={22} className="opacity-80" />
+                </div>
+                <p className="text-2xl sm:text-3xl font-bold mt-2 sm:mt-3 break-words">
+                  {value}
+                </p>
+                {subtitle && (
+                  <p className="text-xs sm:text-sm opacity-80 mt-1">
+                    {subtitle}
+                  </p>
+                )}
+              </div>
+            ))}
+        </div>
+      </div>
+
+      <div className="mb-6 sm:mb-8">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3">
+          Ringkasan Keseluruhan
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+          {cardData.map(({ title, value }) => (
+            <div
+              key={title}
+              className="bg-violet-700 text-white p-4 sm:p-6 rounded-lg shadow-lg"
+            >
+              <h3 className="font-semibold text-sm sm:text-lg">{title}</h3>
+              <p className="text-2xl sm:text-4xl font-bold mt-2 sm:mt-4">
+                {value}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Chart Section */}

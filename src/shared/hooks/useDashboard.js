@@ -4,9 +4,10 @@ import {
   getDashboardStatsAdmin,
   getDashboardStatsOwner,
   getDateRangeSalesOwner,
+  getOwnerDashboardTodayStats,
 } from "../services/dashboardService.js";
 
-export function useDashboard({ mode, setDashboardStats, setDateRangeData }) {
+export function useDashboard({ mode, setDashboardStats, setDateRangeData, setTodayStats }) {
   if (!mode) throw new Error("Mode is required in useDashboard hook");
 
   const [loading, setLoading] = useState(true);
@@ -32,6 +33,20 @@ export function useDashboard({ mode, setDashboardStats, setDateRangeData }) {
     }
   };
 
+  const fetchTodayStats = async () => {
+    setError(null);
+    try {
+      if (mode !== "owner") return null;
+      const stats = await getOwnerDashboardTodayStats();
+      if (setTodayStats) setTodayStats(stats);
+      return stats;
+    } catch (err) {
+      setError(err.message);
+      console.error("Today stats error:", err);
+      return null;
+    }
+  };
+  
   const fetchDateRangeSales = async (startDate, endDate) => {
     setError(null);
     try {
@@ -76,6 +91,7 @@ export function useDashboard({ mode, setDashboardStats, setDateRangeData }) {
       await Promise.all([
         fetchDashboardStats(),
         fetchDateRangeSales(startDate, endDate),
+        mode === "owner" ? fetchTodayStats() : Promise.resolve(),
       ]);
     } catch (err) {
       console.error("Error fetching all dashboard data:", err);
@@ -86,6 +102,7 @@ export function useDashboard({ mode, setDashboardStats, setDateRangeData }) {
 
   return {
     fetchDashboardStats,
+    fetchTodayStats,
     fetchDateRangeSales,
     fetchAllDashboardData,
     loading,
