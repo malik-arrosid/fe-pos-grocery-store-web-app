@@ -192,7 +192,7 @@ export default function LaporanHistoriHargaJual() {
                             Jumlah Transaksi
                           </th>
                           <th className="px-4 py-2 text-right">
-                            Total Subtotal
+                            Jumlah Subtotal
                           </th>
                           <th className="px-4 py-2 text-right">
                             Terakhir Terjual
