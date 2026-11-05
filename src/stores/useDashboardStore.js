@@ -9,6 +9,9 @@ const emptyTodayStats = {
   jumlah_barang_terjual_hari_ini: 0,
   untung_rugi_omset: 0,
   status_untung_rugi_omset: "untung",
+  top_barang_laba: [],
+  top_barang_belanja: [],
+  top_barang_sering: [],
 };
 
 export const useDashboardStore = create((set) => ({

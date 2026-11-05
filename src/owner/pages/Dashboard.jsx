@@ -13,11 +13,15 @@ import {
   Wallet,
   PackagePlus,
   TrendingUp,
+  Award,
+  Coins,
+  Repeat,
 } from "lucide-react";
 import { useUIStore } from "../../stores/useUIStore.js";
 import { useDashboardStore } from "../../stores/useDashboardStore.js";
 import { useDashboard } from "../../shared/hooks/useDashboard.js";
 import { formatToRupiah } from "../../shared/utils/numberFormat.js";
+import { formatQty } from "../../shared/utils/qtyFormat.js";
 
 const getDefaultDates = () => {
   const today = new Date();
@@ -30,6 +34,93 @@ const getDefaultDates = () => {
     endDate: format(today),
   };
 };
+
+function TopBarangTable({
+  items,
+  valueKey,
+  valueLabel,
+  middleKey,
+  middleLabel,
+  icon,
+  emptyText,
+  accentColor,
+  colorClass = "text-violet-700",
+}) {
+  const Icon = icon;
+  const rightHeaderLabel =
+    valueLabel === "Top 5 Paling Sering Dibeli"
+      ? "Total Belanja"
+      : valueLabel.split(" ").slice(-2).join(" ");
+  
+  return (
+    <div className="bg-white rounded-lg shadow p-4 sm:p-6 h-full flex flex-col">
+      <div className="flex items-center gap-2 mb-4">
+        <Icon size={22} className={accentColor} />
+        <h3 className="text-base sm:text-lg font-semibold text-gray-800">
+          {valueLabel}
+        </h3>
+      </div>
+      {items.length === 0 ? (
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-sm text-gray-500 py-6">{emptyText}</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto flex-1">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-200 text-gray-600">
+                <th className="text-left py-2 pr-2 w-8">#</th>
+                <th className="text-left py-2 px-2">Nama Barang</th>
+                <th className="text-right py-2 px-2 whitespace-nowrap">
+                  {middleLabel}
+                </th>
+                <th className="text-right py-2 pl-2 whitespace-nowrap">
+                  {rightHeaderLabel}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item, idx) => {
+                const middleValue = item[middleKey];
+                const isQtyField = middleKey === "total_quantity";
+                const rightValue = Number(item[valueKey] || 0);
+                return (
+                  <tr
+                    key={item.id_barang || idx}
+                    className="border-b border-gray-100 hover:bg-gray-50"
+                  >
+                    <td className="py-2 pr-2 text-gray-500 font-medium">
+                      {idx + 1}
+                    </td>
+                    <td className="py-2 px-2 text-gray-900 font-medium">
+                      {item.nama_barang}
+                    </td>
+                    <td className="py-2 px-2 text-right text-gray-700 whitespace-nowrap">
+                      {isQtyField
+                        ? formatQty(middleValue, item.satuan_dasar)
+                        : middleValue}
+                    </td>
+                    <td
+                      className={`py-2 pl-2 text-right font-semibold whitespace-nowrap ${
+                        valueKey === "total_laba"
+                          ? rightValue >= 0
+                            ? "text-emerald-700"
+                            : "text-red-600"
+                          : colorClass
+                      }`}
+                    >
+                      {formatToRupiah(rightValue)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const { setActiveTab } = useUIStore();
@@ -130,6 +221,10 @@ export default function Dashboard() {
     );
   }
 
+  const topLaba = todayStats?.top_barang_laba || [];
+  const topBelanja = todayStats?.top_barang_belanja || [];
+  const topSering = todayStats?.top_barang_sering || [];
+  
   return (
     <div className="flex-1 p-3 sm:p-6 bg-gray-50 min-h-screen">
       {/* Header */}
@@ -221,6 +316,46 @@ export default function Dashboard() {
                 )}
               </div>
             ))}
+        </div>
+      </div>
+
+      <div className="mb-6 sm:mb-8">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3">
+          Performa Barang Hari Ini
+        </h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+          <TopBarangTable
+            items={topLaba}
+            valueKey="total_laba"
+            valueLabel="Top 5 Laba Tertinggi"
+            middleKey="total_quantity"
+            middleLabel="Terjual"
+            icon={Award}
+            accentColor="text-emerald-700"
+            emptyText="Belum ada penjualan hari ini"
+          />
+          <TopBarangTable
+            items={topBelanja}
+            valueKey="total_subtotal"
+            valueLabel="Top 5 Total Belanja Terbanyak"
+            middleKey="total_quantity"
+            middleLabel="Terjual"
+            icon={Coins}
+            accentColor="text-violet-700"
+            emptyText="Belum ada penjualan hari ini"
+            colorClass="text-violet-700"
+          />
+          <TopBarangTable
+            items={topSering}
+            valueKey="total_subtotal"
+            valueLabel="Top 5 Paling Sering Dibeli"
+            middleKey="total_transaksi"
+            middleLabel="Frekuensi"
+            icon={Repeat}
+            accentColor="text-orange-600"
+            emptyText="Belum ada penjualan hari ini"
+            colorClass="text-blue-700"
+          />
         </div>
       </div>
 
