@@ -91,7 +91,7 @@ export default function BarangForm({
         />
       </div>
 
-      <div className="mb-4">
+      {/* <div className="mb-4">
         <label className="block text-slate-700 text-sm font-bold mb-2">
           Minimum Stok
           {isGram && (
@@ -130,7 +130,7 @@ export default function BarangForm({
           Batas minimum stok untuk peringatan. Kosongkan jika tidak ingin
           peringatan.
         </p>
-      </div>
+      </div> */}
 
       {/* Harga Jual */}
       <div className="mb-6">
