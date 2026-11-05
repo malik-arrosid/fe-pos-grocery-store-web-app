@@ -1,8 +1,33 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useUIStore } from "../../stores/useUIStore.js";
 import { usePelangganStore } from "../../stores/usePelangganStore.js";
 import { usePelanggan } from "../../shared/hooks/usePelanggan.js";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { addHistoriTukarPoinOwner, getHistoriTukarPoinOwner } from "../../shared/services/historiTukarPoinService.js";
+import Swal from "sweetalert2";
+import { Gift, ChevronLeft, ChevronRight, History, X } from "lucide-react";
+
+const MIN_POIN_TUKAR = 10;
+
+const HADIAH_TIERS = [
+  { poin: 10, label: "3 Ekonomi Sabun Cuci Piring Cair 122ml" },
+  { poin: 20, label: "1 Rinso Anti Noda 770g" },
+  { poin: 30, label: "1 Sunlight Jeruk Nipis 750ml" },
+  { poin: 50, label: "1 Beras Pandan Wangi 5kg" },
+  { poin: 75, label: "1 Minyak Goreng Tropical 2L" },
+  { poin: 100, label: "1 Gula Pasir Gulaku 1kg + 1 Teh Celup" },
+];
+
+const resolveHadiahTier = (poinSaatIni) => {
+  const poin = Number(poinSaatIni) || 0;
+  if (poin <= 0) return null;
+  let matched = null;
+  for (const tier of HADIAH_TIERS) {
+    if (tier.poin <= poin) matched = tier;
+    else break;
+  }
+  return matched || { poin, label: `Hadiah Tukar Poin (${poin} poin)` };
+};
 
 export default function DaftarPelanggan() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -10,7 +35,46 @@ export default function DaftarPelanggan() {
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState(10);
   const [isSearching, setIsSearching] = useState(false);
+  const [selectedPelanggan, setSelectedPelanggan] = useState(null);
+  const [hadiah, setHadiah] = useState("");
+  const [hargaHadiah, setHargaHadiah] = useState("");
+  const [isRedeeming, setIsRedeeming] = useState(false);
+  const [customersWithHistori, setCustomersWithHistori] = useState(new Set());
+  const [isFetchingHistori, setIsFetchingHistori] = useState(false);
+  const navigate = useNavigate();
 
+  const loadCustomersWithHistori = async () => {
+    setIsFetchingHistori(true);
+    try {
+      const ids = new Set();
+      const limitPerPage = 20;
+      let page = 1;
+      let totalPage = 1;
+
+      // Loop sampai semua halaman terambil
+      do {
+        const res = await getHistoriTukarPoinOwner({
+          page,
+          limit: limitPerPage,
+        });
+        const rows = res.data?.data || [];
+        const meta = res.data?.meta || {};
+        rows.forEach((row) => {
+          if (row.id_pelanggan) ids.add(row.id_pelanggan);
+        });
+        totalPage = meta.total_page || 1;
+        page += 1;
+      } while (page <= totalPage);
+
+      setCustomersWithHistori(ids);
+    } catch (error) {
+      console.error("Gagal memuat daftar histori tukar poin:", error);
+      // Tidak perlu ganggu UI; biarkan tombol Histori default disabled
+    } finally {
+      setIsFetchingHistori(false);
+    }
+  };
+  
   const { fetchPelanggan, search, loading, meta } = usePelanggan({
     searchQuery: searchTerm,
     setPelanggan,
@@ -20,6 +84,7 @@ export default function DaftarPelanggan() {
 
   useEffect(() => {
     setActiveTab("Daftar Pelanggan");
+    loadCustomersWithHistori();
   }, [setActiveTab]);
 
   useEffect(() => {
@@ -59,6 +124,95 @@ export default function DaftarPelanggan() {
     setIsSearching(false);
     setCurrentPage(1);
   };
+
+  const openRedemptionForm = (customer) => {
+    const poinSaatIni = Number(customer.poin_loyalitas ?? 0);
+    const tier = resolveHadiahTier(poinSaatIni);
+    setSelectedPelanggan(customer);
+    setHadiah(tier ? tier.label : "");
+    setHargaHadiah(poinSaatIni > 0 ? String(poinSaatIni) : "");
+  };
+
+  const handleRedeem = async (event) => {
+    event.preventDefault();
+    if (!selectedPelanggan) return;
+
+    if (Number(selectedPelanggan.poin_loyalitas ?? 0) < MIN_POIN_TUKAR) {
+      Swal.fire(
+        "Poin Tidak Cukup",
+        `Pelanggan harus memiliki minimal ${MIN_POIN_TUKAR} poin untuk menukar hadiah.`,
+        "warning",
+      );
+      return;
+    }
+
+    const poinSaatIni = Number(selectedPelanggan.poin_loyalitas ?? 0);
+    const poinDipakai = Number(hargaHadiah || 0);
+    const sisaPoin = Math.max(0, poinSaatIni - poinDipakai);
+
+    const konfirmasi = await Swal.fire({
+      icon: "question",
+      title: "Konfirmasi Tukar Poin",
+      html: `
+      <p>Apakah sudah yakin ingin menukar poin ke hadiah?</p>
+      <div style="margin-top:10px;text-align:left;font-size:14px;line-height:1.6">
+        <div><strong>Hadiah:</strong> ${hadiah || "-"}</div>
+        <div><strong>Poin dipakai:</strong> ${poinDipakai.toLocaleString("id-ID")} poin</div>
+        <div><strong>Poin saat ini:</strong> ${poinSaatIni.toLocaleString("id-ID")} poin</div>
+        <div><strong>Sisa poin:</strong> ${sisaPoin.toLocaleString("id-ID")} poin</div>
+      </div>
+    `,
+      showCancelButton: true,
+      confirmButtonText: "Ok, Tukar",
+      cancelButtonText: "Nanti Dulu",
+      confirmButtonColor: "#6d28d9",
+      cancelButtonColor: "#6b7280",
+      reverseButtons: true,
+      focusCancel: true,
+    });
+
+    if (!konfirmasi.isConfirmed) {
+      return;
+    }
+    
+    setIsRedeeming(true);
+    try {
+      const response = await addHistoriTukarPoinOwner({
+        id_pelanggan: selectedPelanggan.id_pelanggan,
+        hadiah: hadiah.trim(),
+        harga_hadiah: Number(hargaHadiah),
+      });
+      const updated = response.data.data;
+
+      setPelanggan(
+        pelanggan.map((customer) =>
+          customer.id_pelanggan === selectedPelanggan.id_pelanggan
+            ? { ...customer, poin_loyalitas: updated.poin_loyalitas }
+            : customer,
+        ),
+      );
+      loadCustomersWithHistori();
+      setSelectedPelanggan(null);
+      await Swal.fire(
+        "Berhasil",
+        "Penukaran poin pelanggan berhasil",
+        "success",
+      );
+    } catch (error) {
+      Swal.fire(
+        "Gagal",
+        error.response?.data?.message || "Penukaran poin gagal disimpan",
+        "error",
+      );
+    } finally {
+      setIsRedeeming(false);
+    }
+  };
+
+  const today = new Date();
+  const todayValue = `${today.getFullYear()}-${String(
+    today.getMonth() + 1,
+  ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= meta.total_page) {
@@ -188,7 +342,85 @@ export default function DaftarPelanggan() {
                       {p.frekuensi_transaksi}
                     </td>
                     <td className="px-4 sm:px-6 py-3 sm:py-4 text-gray-700">
-                      {p.poin_loyalitas}
+                      {(() => {
+                        const poin = Number(p.poin_loyalitas ?? 0);
+                        const poinCukup = poin >= MIN_POIN_TUKAR;
+
+                        return (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span>{poin}</span>
+
+                            {/* Tombol Tukar */}
+                            <button
+                              type="button"
+                              onClick={() => poinCukup && openRedemptionForm(p)}
+                              disabled={!poinCukup}
+                              title={
+                                poinCukup
+                                  ? "Tukar poin pelanggan"
+                                  : `Poin minimal ${MIN_POIN_TUKAR} untuk menukar`
+                              }
+                              className={`flex items-center gap-1 rounded px-2 py-1 text-xs text-white ${
+                                poinCukup
+                                  ? "bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
+                                  : "bg-gray-300 cursor-not-allowed opacity-60"
+                              }`}
+                            >
+                              <Gift size={13} /> Tukar
+                            </button>
+
+                            {/* Tombol Histori — disabled jika poin belum cukup */}
+                            {(() => {
+                              const hasHistori = customersWithHistori.has(
+                                p.id_pelanggan,
+                              );
+                              const historiButtonDisabled =
+                                !hasHistori || isFetchingHistori;
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    hasHistori &&
+                                    navigate(
+                                      `/owner/daftar-pelanggan/${p.id_pelanggan}/histori-tukar-poin`,
+                                    )
+                                  }
+                                  disabled={historiButtonDisabled}
+                                  title={
+                                    hasHistori
+                                      ? "Lihat histori tukar poin"
+                                      : "Belum ada histori tukar poin untuk pelanggan ini"
+                                  }
+                                  className={`flex items-center gap-1 rounded px-2 py-1 text-xs text-white ${
+                                    !historiButtonDisabled
+                                      ? "bg-violet-700 hover:bg-violet-800 cursor-pointer"
+                                      : "bg-gray-300 cursor-not-allowed opacity-60"
+                                  }`}
+                                >
+                                  <History size={13} /> Histori
+                                </button>
+                              );
+                            })()}
+
+                            {/* Label status poin — di sebelah tombol Histori */}
+                            {poinCukup ? (
+                              <span
+                                className="bg-green-100 text-green-800 py-1 px-2 rounded-full text-xs font-medium whitespace-nowrap"
+                                title={`Poin ${poin} mencukupi (minimal ${MIN_POIN_TUKAR})`}
+                              >
+                                Siap Ditukarkan
+                              </span>
+                            ) : (
+                              <span
+                                className="bg-red-100 text-red-700 py-1 px-2 rounded-full text-xs font-medium whitespace-nowrap"
+                                title={`Butuh minimal ${MIN_POIN_TUKAR} poin untuk menukar`}
+                              >
+                                ⚠ Poin Belum Cukup
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))
@@ -242,6 +474,121 @@ export default function DaftarPelanggan() {
               <ChevronRight size={18} />
             </button>
           </div>
+        </div>
+      )}
+
+      {selectedPelanggan && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          role="presentation"
+        >
+          <form
+            onSubmit={handleRedeem}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="redemption-title"
+            className="w-full max-w-lg rounded-xl bg-white p-5 shadow-xl sm:p-6"
+          >
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h2
+                  id="redemption-title"
+                  className="text-xl font-bold text-gray-900"
+                >
+                  Form Tukar Poin
+                </h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  Poin saat ini:{" "}
+                  {Number(selectedPelanggan.poin_loyalitas).toLocaleString(
+                    "id-ID",
+                  )}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedPelanggan(null)}
+                disabled={isRedeeming}
+                className="rounded p-1 text-black hover:text-white hover:bg-red-500 cursor-pointer"
+                aria-label="Tutup form"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Hadiah
+                <input
+                  type="text"
+                  value={hadiah}
+                  readOnly
+                  onChange={(event) => setHadiah(event.target.value)}
+                  maxLength={120}
+                  required
+                  autoFocus
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
+                  placeholder="Masukkan hadiah"
+                />
+                <p className="mt-1 text-xs text-violet-700">
+                  Hadiah terisi otomatis sesuai poin pelanggan dan tidak dapat
+                  diubah.
+                </p>
+              </label>
+
+              <label className="block text-sm font-medium text-gray-700">
+                Harga hadiah (poin)
+                <input
+                  type="number"
+                  value={hargaHadiah}
+                  readOnly
+                  onChange={(event) => setHargaHadiah(event.target.value)}
+                  min={MIN_POIN_TUKAR}
+                  max={selectedPelanggan.poin_loyalitas}
+                  step="1"
+                  required
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
+                  placeholder={`Masukkan ${MIN_POIN_TUKAR} poin`}
+                />
+                <p className="mt-1 text-xs text-violet-700">
+                  Poin yang dipakai = poin saat ini (
+                  {selectedPelanggan?.poin_loyalitas ?? 0} poin). Setelah
+                  ditukar, poin berkurang menjadi <strong>0</strong>.
+                </p>
+              </label>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="text-sm">
+                  <span className="block font-medium text-gray-700">
+                    Tanggal tukar
+                  </span>
+                  <input
+                    type="date"
+                    value={todayValue}
+                    readOnly
+                    className="mt-1 w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-gray-600"
+                  />
+                </div>
+                <div className="text-sm">
+                  <span className="block font-medium text-gray-700">
+                    Nama pelanggan
+                  </span>
+                  <p className="mt-1 rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-gray-700">
+                    {selectedPelanggan.nama_pelanggan}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="submit"
+                disabled={isRedeeming || !hadiah || !hargaHadiah}
+                className="rounded-lg bg-violet-700 px-4 py-2 text-sm font-medium text-white hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+              >
+                {isRedeeming ? "Menyimpan..." : "Tukarkan"}
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>

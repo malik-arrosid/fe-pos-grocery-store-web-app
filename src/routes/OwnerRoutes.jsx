@@ -12,6 +12,7 @@ import DaftarPelanggan from "../owner/pages/DaftarPelanggan.jsx";
 import DetailTransaksi from "../owner/pages/DetailTransaksi.jsx";
 import DetailNotifikasi from "../owner/pages/DetailNotifikasi.jsx";
 import Notifikasi from "../owner/pages/Notifikasi.jsx";
+import HistoriTukarPoin from "../owner/pages/HistoriTukarPoin.jsx";
 import useFcmNotification from "../shared/hooks/useFcmNotification.js";
 import { useAuthStore } from "../stores/useAuthStore.js";
 
@@ -71,9 +72,16 @@ export default function OwnerRoutes() {
             <Route path="daftar-barang" element={<DaftarBarang />} />
             <Route path="histori-transaksi" element={<HistoriTransaksi />} />
             <Route path="detail-transaksi/:id" element={<DetailTransaksi />} />
-            <Route path="detail-notifikasi/:id" element={<DetailNotifikasi />} />
+            <Route
+              path="detail-notifikasi/:id"
+              element={<DetailNotifikasi />}
+            />
             <Route path="notifikasi" element={<Notifikasi />} />
             <Route path="daftar-pelanggan" element={<DaftarPelanggan />} />
+            <Route
+              path="daftar-pelanggan/:id_pelanggan/histori-tukar-poin"
+              element={<HistoriTukarPoin />}
+            />
           </Routes>
         </div>
       </div>
